@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>엑셀 vs 통합 PDF 비교기 (수정완성본)</title>
+  <title>엑셀 vs 통합 PDF 비교기 (완성본)</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <style>
@@ -11,45 +11,52 @@
     body { margin: 0; font-family: Arial, sans-serif; background: #f3f6fb; color: #1f2937; }
     header { background: #0b5cab; color: #fff; padding: 14px 18px; }
     header h1 { margin: 0; font-size: 18px; }
-    .wrap { max-width: 1280px; margin: 16px auto; padding: 0 12px; }
-    .card { background: #fff; border-radius: 12px; padding: 14px; margin-bottom: 12px; box-shadow: 0 2px 10px rgba(0,0,0,.05); }
-    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-    @media(max-width:900px){ .grid{ grid-template-columns:1fr; } }
 
-    label { display: block; font-size: 13px; font-weight: 700; color: #4b5563; margin-bottom: 6px; }
+    .wrap { max-width: 1320px; margin: 16px auto; padding: 0 12px; }
+    .card { background: #fff; border-radius: 12px; padding: 14px; margin-bottom: 12px; box-shadow: 0 2px 10px rgba(0,0,0,.05); }
+    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .grid4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 10px; }
+    @media(max-width:1100px){ .grid4{grid-template-columns:1fr 1fr;} }
+    @media(max-width:900px){ .grid2,.grid4{grid-template-columns:1fr;} }
+
+    label { display:block; font-size:13px; font-weight:700; color:#4b5563; margin-bottom:6px; }
     input[type=file], select {
-      width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 8px; background: #fff;
+      width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 8px; background:#fff;
     }
     button {
-      border: none; background: #0b5cab; color: #fff; padding: 10px 14px; border-radius: 8px;
-      font-weight: 700; cursor: pointer;
+      border:none; background:#0b5cab; color:#fff; padding:10px 14px; border-radius:8px; font-weight:700; cursor:pointer;
     }
-    button:disabled { background: #9ca3af; cursor: not-allowed; }
+    button:disabled { background:#9ca3af; cursor:not-allowed; }
 
-    .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
-    .muted { color: #6b7280; font-size: 12px; }
-    .ok { color: #166534; }
-    .warn { color: #92400e; }
-    .err { color: #991b1b; }
+    .row { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+    .muted { color:#6b7280; font-size:12px; }
+    .ok { color:#166534; }
+    .warn { color:#92400e; }
+    .err { color:#991b1b; }
+    .small { font-size:11px; color:#6b7280; }
 
-    .chips { display: flex; gap: 8px; flex-wrap: wrap; margin: 10px 0; }
-    .chip { padding: 6px 10px; border-radius: 20px; font-size: 12px; font-weight: 700; }
-    .match { background: #dcfce7; color: #166534; }
-    .similar { background: #fef9c3; color: #854d0e; }
-    .mismatch { background: #fee2e2; color: #991b1b; }
-    .missing { background: #e5e7eb; color: #374151; }
+    .chips { display:flex; gap:8px; flex-wrap:wrap; margin:10px 0; }
+    .chip { padding:6px 10px; border-radius:20px; font-size:12px; font-weight:700; }
+    .match { background:#dcfce7; color:#166534; }
+    .similar { background:#fef9c3; color:#854d0e; }
+    .mismatch { background:#fee2e2; color:#991b1b; }
+    .missing { background:#e5e7eb; color:#374151; }
 
-    table { width: 100%; border-collapse: collapse; font-size: 13px; }
-    th, td { border-bottom: 1px solid #e5e7eb; padding: 9px; vertical-align: top; }
-    th { background: #f9fafb; text-align: left; }
+    table { width:100%; border-collapse:collapse; font-size:13px; }
+    th,td { border-bottom:1px solid #e5e7eb; padding:9px; vertical-align:top; }
+    th { background:#f9fafb; text-align:left; }
     .txt {
-      max-height: 120px; overflow: auto; white-space: pre-wrap;
-      background: #f8fafc; border: 1px solid #e2e8f0; padding: 7px; border-radius: 6px;
+      max-height:120px; overflow:auto; white-space:pre-wrap;
+      background:#f8fafc; border:1px solid #e2e8f0; padding:7px; border-radius:6px;
     }
-    .badge { font-size: 12px; padding: 4px 8px; border-radius: 6px; font-weight: 700; display: inline-block; }
-    .pbar { height: 6px; background: #e5e7eb; border-radius: 8px; margin-top: 4px; }
-    .pfill { height: 6px; background: #0b5cab; border-radius: 8px; }
-    .small { font-size: 11px; color: #6b7280; }
+    .badge { font-size:12px; padding:4px 8px; border-radius:6px; font-weight:700; display:inline-block; }
+    .pbar { height:6px; background:#e5e7eb; border-radius:8px; margin-top:4px; }
+    .pfill { height:6px; background:#0b5cab; border-radius:8px; }
+
+    .info {
+      margin-top:8px; padding:8px 10px; border-radius:8px;
+      background:#eff6ff; border:1px solid #bfdbfe; color:#1e40af; font-size:12px;
+    }
     .warnbox{
       margin-top:8px; padding:8px 10px; border-radius:8px;
       background:#fffbeb; border:1px solid #fde68a; color:#92400e; font-size:12px;
@@ -57,52 +64,88 @@
   </style>
 </head>
 <body>
-  <header><h1>📊 엑셀 vs 통합 PDF 비교기 (수정완성본)</h1></header>
+  <header><h1>📊 엑셀 vs 통합 PDF 비교기 (통합PDF/2줄헤더 대응 완성본)</h1></header>
 
   <div class="wrap">
-    <div class="card grid">
+    <!-- 업로드 -->
+    <div class="card grid2">
       <div>
         <label>엑셀 파일 (.xlsx/.xls)</label>
         <input id="excelFile" type="file" accept=".xlsx,.xls"/>
-        <div class="muted" id="excelMsg">엑셀을 선택하세요</div>
+        <div class="muted" id="excelMsg">엑셀 파일을 선택하세요</div>
       </div>
       <div>
         <label>통합 PDF 파일 (전체 수강생 포함)</label>
         <input id="pdfFile" type="file" accept=".pdf"/>
-        <div class="muted" id="pdfMsg">PDF를 선택하세요</div>
+        <div class="muted" id="pdfMsg">PDF 파일을 선택하세요</div>
       </div>
     </div>
 
+    <!-- 매핑 설정 -->
+    <div class="card">
+      <div class="grid4">
+        <div>
+          <label>이름 컬럼 (수동 선택 가능)</label>
+          <select id="nameColSelect"><option value="">-- 자동탐지/선택 --</option></select>
+        </div>
+        <div>
+          <label>과제명 컬럼 (수동 선택 가능)</label>
+          <select id="taskColSelect"><option value="">-- 자동탐지/선택 --</option></select>
+        </div>
+        <div>
+          <label>시트 선택</label>
+          <select id="sheetSelect"><option value="">-- 첫 시트 자동 --</option></select>
+        </div>
+        <div>
+          <label>헤더 모드</label>
+          <select id="headerMode">
+            <option value="auto" selected>자동 (권장)</option>
+            <option value="single">1줄 헤더</option>
+            <option value="double">2줄 헤더 병합</option>
+          </select>
+        </div>
+      </div>
+      <div class="info" id="mappingInfo">컬럼 매핑 상태가 여기에 표시됩니다.</div>
+    </div>
+
+    <!-- 실행 -->
     <div class="card">
       <div class="row">
-        <div style="min-width:340px;flex:1">
+        <div style="min-width:360px;flex:1">
           <label>수강생 선택</label>
           <select id="studentSelect"><option value="">-- 엑셀 업로드 후 선택 --</option></select>
         </div>
+        <div style="padding-top:18px"><button id="btnReloadExcel" disabled>엑셀 다시 파싱</button></div>
         <div style="padding-top:18px"><button id="btnLoadPdf" disabled>PDF 텍스트 추출</button></div>
         <div style="padding-top:18px"><button id="btnCompare" disabled>선택 수강생 비교</button></div>
         <div style="padding-top:18px"><button id="btnCompareAll" disabled>전체 수강생 일괄 비교</button></div>
       </div>
       <div id="status" class="muted" style="margin-top:8px">대기 중</div>
       <div class="warnbox">
-        ⚠️ 이 버전은 <b>PDF 텍스트 레이어</b> 기반입니다. 스캔 이미지 PDF면 인식이 약할 수 있습니다(OCR 백엔드 필요).
+        ⚠️ 브라우저 단독 버전입니다. 스캔 이미지 PDF는 정확도가 낮을 수 있습니다.
       </div>
     </div>
 
-    <div class="card" id="result">
-      <div class="muted">결과가 여기에 표시됩니다.</div>
-    </div>
+    <!-- 결과 -->
+    <div class="card" id="result"><div class="muted">결과가 여기에 표시됩니다.</div></div>
   </div>
 
   <script>
-    pdfjsLib.GlobalWorkerOptions.workerSrc =
-      "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+    pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
 
+    // 전역 상태
     let excelRows = [];
     let headers = [];
-    let pdfPages = [];      // [{page, text}]
+    let pdfPages = [];
     let pdfAllText = "";
-    let headerRowIdx = 0;
+    let allSheets = [];
+    let excelFileRef = null;
+    let headerStartRow = 0;
+    let parsedSheetName = "";
+
+    // 자동/수동 컬럼 선택
+    let autoNameCol = "";
+    let autoTaskCol = "";
 
     const fields = [
       "과제명",
@@ -121,16 +164,23 @@
     ];
     const levels = ["보통","우수","탁월","초급","중급","고급","전문가"];
 
+    // UI
     const excelFile = document.getElementById("excelFile");
     const pdfFile = document.getElementById("pdfFile");
+    const nameColSelect = document.getElementById("nameColSelect");
+    const taskColSelect = document.getElementById("taskColSelect");
+    const sheetSelect = document.getElementById("sheetSelect");
+    const headerMode = document.getElementById("headerMode");
+    const mappingInfo = document.getElementById("mappingInfo");
     const studentSelect = document.getElementById("studentSelect");
+    const btnReloadExcel = document.getElementById("btnReloadExcel");
     const btnLoadPdf = document.getElementById("btnLoadPdf");
     const btnCompare = document.getElementById("btnCompare");
     const btnCompareAll = document.getElementById("btnCompareAll");
     const statusEl = document.getElementById("status");
     const resultEl = document.getElementById("result");
 
-    // ---------------- 유틸 ----------------
+    // ----------------- 유틸 -----------------
     function cleanKey(s){
       return String(s || "")
         .replace(/\s+/g, "")
@@ -145,73 +195,28 @@
       return levels.find(x => s.includes(x)) || null;
     }
     function tokenRatio(a,b){
-      const stop = new Set(["및","을","를","이","가","은","는","의","에","로","으로","하고","하여","수","것","등","또한","통해","대한","위한","본","에서","으로서","합니다","있습니다"]);
+      const stop = new Set(["및","을","를","이","가","은","는","의","에","로","으로","하고","하여","수","것","등","또한","통해","대한","위한","본","에서","으로서","합니다","있습니다","했다","한다"]);
       const tok = t => String(t||"")
         .replace(/[^가-힣a-zA-Z0-9\s]/g," ")
         .split(/\s+/)
         .filter(x => x.length > 1 && !stop.has(x));
       const A = new Set(tok(a)), B = new Set(tok(b));
       if(!A.size || !B.size) return 0;
-      let inter = 0; A.forEach(x => { if(B.has(x)) inter++; });
+      let inter = 0; A.forEach(x=>{ if(B.has(x)) inter++; });
       return inter / Math.min(A.size, B.size);
     }
-
     function isEmptyRow(obj){
       return Object.values(obj).every(v => String(v ?? "").trim() === "");
     }
-
-    function pickNameColumn(){
-      const candidates = headers.filter(h => /성함|이름|수강생|수료생|성명/i.test(h));
-      if(candidates.length) return candidates[0];
-
-      // fallback: 첫 컬럼
-      return headers[0] || null;
-    }
-
-    function pickTaskColumn(){
-      const c = headers.find(h => /과제명/i.test(h));
-      return c || null;
-    }
-
-    function pickName(row){
-      const nk = pickNameColumn();
-      if(!nk) return "";
-      return String(row[nk] ?? "").trim();
-    }
-
-    function findCol(target){
-      const t = cleanKey(target);
-
-      // 1) 정확
-      let hit = headers.find(h => cleanKey(h) === t);
-      if(hit) return hit;
-
-      // 2) 포함
-      hit = headers.find(h => cleanKey(h).includes(t) || t.includes(cleanKey(h)));
-      if(hit) return hit;
-
-      // 3) 별칭
-      const alias = {
-        "문제인식및정의":["문제정의","문제인식","문제인식정의"],
-        "솔루션설계":["해결방안설계","해결설계","설계"],
-        "llm활용구현":["llm구현","활용구현","llm활용"],
-        "검증및개선":["검증개선","검증","개선"],
-        "비전computervision프로젝트":["비전프로젝트","cv프로젝트","computervision프로젝트"],
-        "머신러닝표준ml프로젝트":["머신러닝프로젝트","ml프로젝트","표준ml프로젝트"],
-        "딥러닝고급dl프로젝트":["딥러닝프로젝트","dl프로젝트","고급dl프로젝트"],
-        "과제상세":["상세","과제내용"],
-        "종합제언":["제언","종합의견"],
-        "단기적용계획":["단기계획"],
-        "중장기적용계획":["중장기계획"],
-        "진행률":["완료율","진행상황"]
-      };
-      const al = alias[t] || [];
-      for(const a of al){
-        const h = headers.find(x => cleanKey(x).includes(cleanKey(a)));
-        if(h) return h;
+    function extractNear(text, keywords, window=900){
+      if(typeof keywords === "string") keywords = [keywords];
+      for(const kw of keywords){
+        const i = text.indexOf(kw);
+        if(i !== -1){
+          return text.substring(Math.max(0, i-120), i+window).replace(/\s+/g," ").trim();
+        }
       }
-
-      return null;
+      return "";
     }
 
     function fieldKeywords(field){
@@ -233,123 +238,248 @@
       return m[field] || [field];
     }
 
-    function extractNear(text, keywords, window=800){
-      if(typeof keywords === "string") keywords = [keywords];
-      for(const kw of keywords){
-        const i = text.indexOf(kw);
-        if(i !== -1){
-          return text.substring(Math.max(0, i-120), i+window).replace(/\s+/g," ").trim();
-        }
+    function buildMergedHeaders(h1, h2){
+      const len = Math.max(h1.length, h2.length);
+      const out = [];
+      for(let i=0;i<len;i++){
+        const a = String(h1[i] ?? "").trim();
+        const b = String(h2[i] ?? "").trim();
+        if(a && b) out.push(`${a}|${b}`);
+        else out.push(a || b || `__COL_${i}`);
       }
-      return "";
+      return out;
     }
 
-    // ---------------- 엑셀 헤더 자동탐지 ----------------
-    async function loadExcelSmart(file){
-      const buf = await file.arrayBuffer();
-      const wb = XLSX.read(buf, { type:"array" });
-      const ws = wb.Sheets[wb.SheetNames[0]];
+    function findHeaderStart(aoa){
+      for(let i=0;i<Math.min(aoa.length, 40); i++){
+        const row = (aoa[i]||[]).map(v=>String(v).trim()).join(" | ");
+        if(/수료생 기본 정보|학습 성과 평가 결과|성함|성명|이름|과제명|입과 평가|수료 평가/.test(row)){
+          return i;
+        }
+      }
+      return 0;
+    }
 
+    // 2줄 헤더가 의미있는지 판정
+    function shouldUseDoubleHeader(aoa, start){
+      const h1 = (aoa[start]||[]).map(v=>String(v).trim());
+      const h2 = (aoa[start+1]||[]).map(v=>String(v).trim());
+      const h1Text = h1.join(" ");
+      const h2Text = h2.join(" ");
+      const hasGroupWords = /수료생 기본 정보|학습 성과 평가 결과|주요 활용 기술|AI 문제 해결 역량|실무 응용력|과제 수행|종합 제언|Key Highlights/.test(h1Text);
+      const hasDetailWords = /성함|과제명|입과 평가|1차 성과 평가|문제 인식|솔루션 설계|LLM 활용|검증 및 개선|과제 상세|진행률/.test(h2Text);
+      return hasGroupWords || hasDetailWords;
+    }
+
+    function parseWithMode(aoa, mode){
+      const start = findHeaderStart(aoa);
+      let hdr = [];
+      let dataStart = start + 1;
+
+      if(mode === "single"){
+        hdr = (aoa[start]||[]).map(v=>String(v).trim() || "");
+        dataStart = start + 1;
+      } else if(mode === "double"){
+        hdr = buildMergedHeaders(aoa[start]||[], aoa[start+1]||[]);
+        dataStart = start + 2;
+      } else {
+        // auto
+        const useDouble = shouldUseDoubleHeader(aoa, start);
+        if(useDouble){
+          hdr = buildMergedHeaders(aoa[start]||[], aoa[start+1]||[]);
+          dataStart = start + 2;
+        } else {
+          hdr = (aoa[start]||[]).map(v=>String(v).trim() || "");
+          dataStart = start + 1;
+        }
+      }
+
+      const valid = hdr.map((h,idx)=>({h: String(h||"").trim() || `__COL_${idx}`, idx}))
+                      .filter(x => !x.h.startsWith("__COL_"));
+
+      const headersLocal = valid.map(x=>x.h);
+      const rows = [];
+
+      for(let r=dataStart; r<aoa.length; r++){
+        const rowArr = aoa[r] || [];
+        const obj = {};
+        let has = false;
+        valid.forEach(({h,idx})=>{
+          const v = rowArr[idx] ?? "";
+          obj[h] = v;
+          if(String(v).trim()!=="") has = true;
+        });
+        if(has) rows.push(obj);
+      }
+
+      return { headers: headersLocal, rows, startRow: start, dataStartRow: dataStart };
+    }
+
+    function findColSmart(target){
+      const t = cleanKey(target);
+
+      // 1) 정확
+      let hit = headers.find(h => cleanKey(h) === t);
+      if(hit) return hit;
+
+      // 2) 포함
+      hit = headers.find(h => cleanKey(h).includes(t) || t.includes(cleanKey(h)));
+      if(hit) return hit;
+
+      // 3) tail 비교: "그룹|세부"에서 세부만 비교
+      hit = headers.find(h => {
+        const tail = h.includes("|") ? h.split("|").pop() : h;
+        const ct = cleanKey(tail);
+        return ct === t || ct.includes(t) || t.includes(ct);
+      });
+      if(hit) return hit;
+
+      // 4) 별칭
+      const alias = {
+        "문제인식및정의":["문제정의","문제인식","문제인식정의"],
+        "솔루션설계":["해결방안설계","해결설계","설계"],
+        "llm활용구현":["llm구현","활용구현","llm활용"],
+        "검증및개선":["검증개선","검증","개선"],
+        "비전computervision프로젝트":["비전프로젝트","cv프로젝트","computervision프로젝트"],
+        "머신러닝표준ml프로젝트":["머신러닝프로젝트","ml프로젝트","표준ml프로젝트"],
+        "딥러닝고급dl프로젝트":["딥러닝프로젝트","dl프로젝트","고급dl프로젝트"],
+        "과제상세":["상세","과제내용"],
+        "종합제언":["제언","종합의견"],
+        "단기적용계획":["단기계획"],
+        "중장기적용계획":["중장기계획"],
+        "진행률":["완료율","진행상황"],
+        "과제명":["프로젝트명"]
+      };
+      const al = alias[t] || [];
+      for(const a of al){
+        const h = headers.find(x => cleanKey(x).includes(cleanKey(a)));
+        if(h) return h;
+      }
+      return null;
+    }
+
+    function guessNameCol(headersLocal, rowsLocal){
+      // 헤더 이름 기반 우선
+      let c = headersLocal.find(h => /성함|성명|이름/.test(h));
+      if(c) return c;
+
+      c = headersLocal.find(h => /수료생 기본 정보\|성함|수료생기본정보\|성함/i.test(cleanKey(h)));
+      if(c) return c;
+
+      // 값 패턴 기반 (한글 이름 2~4자 비율)
+      let best = null, bestScore = -1;
+      headersLocal.forEach(h=>{
+        const vals = rowsLocal.map(r=>String(r[h]??"").trim()).filter(Boolean).slice(0,40);
+        if(!vals.length) return;
+        const score = vals.filter(v => /^[가-힣]{2,4}$/.test(v)).length;
+        if(score > bestScore){ bestScore = score; best = h; }
+      });
+      return best || headersLocal[0] || "";
+    }
+
+    function guessTaskCol(headersLocal){
+      return headersLocal.find(h => /과제명/.test(h)) || "";
+    }
+
+    function getSelectedNameCol(){
+      return nameColSelect.value || autoNameCol;
+    }
+    function getSelectedTaskCol(){
+      return taskColSelect.value || autoTaskCol;
+    }
+
+    function getName(row){
+      const c = getSelectedNameCol();
+      return c ? String(row[c] ?? "").trim() : "";
+    }
+
+    function updateMappingInfo(){
+      const nc = getSelectedNameCol();
+      const tc = getSelectedTaskCol();
+      mappingInfo.innerHTML = `
+        <b>현재 매핑</b> |
+        이름컬럼: <b>${nc || "(미지정)"}</b> |
+        과제컬럼: <b>${tc || "(미지정)"}</b> |
+        시트: <b>${parsedSheetName || "(미지정)"}</b> |
+        헤더시작행: <b>${headerStartRow+1}</b>
+      `;
+    }
+
+    function updateButtons(){
+      btnReloadExcel.disabled = !excelFileRef;
+      btnLoadPdf.disabled = !(excelRows.length && pdfFile.files.length);
+      btnCompare.disabled = !(pdfAllText.length && studentSelect.value !== "" && getSelectedNameCol());
+      btnCompareAll.disabled = !(pdfAllText.length && excelRows.length && getSelectedNameCol());
+    }
+
+    // ----------------- 엑셀 파싱 -----------------
+    async function parseExcelFromCurrentOptions(){
+      if(!excelFileRef) return;
+
+      const buf = await excelFileRef.arrayBuffer();
+      const wb = XLSX.read(buf, { type: "array" });
+      allSheets = wb.SheetNames;
+
+      // 시트 셀렉트 채우기
+      if(!sheetSelect.dataset.inited){
+        sheetSelect.innerHTML = "";
+        allSheets.forEach((s,idx)=>{
+          const op = document.createElement("option");
+          op.value = s;
+          op.textContent = idx === 0 ? `${s} (기본)` : s;
+          sheetSelect.appendChild(op);
+        });
+        sheetSelect.dataset.inited = "1";
+      }
+
+      const useSheet = sheetSelect.value || allSheets[0];
+      const ws = wb.Sheets[useSheet];
       const aoa = XLSX.utils.sheet_to_json(ws, { header:1, defval:"" });
 
-      let hdr = -1;
-      for(let i=0; i<Math.min(aoa.length, 40); i++){
-        const row = (aoa[i] || []).map(v => String(v).trim());
-        const joined = row.join(" | ");
-        if(
-          /성함|이름|수강생|수료생|성명/.test(joined) ||
-          /과제명/.test(joined) ||
-          /입과 평가|수료 평가/.test(joined)
-        ){
-          hdr = i; break;
-        }
-      }
-      if(hdr === -1) hdr = 0;
+      const parsed = parseWithMode(aoa, headerMode.value);
+      headers = parsed.headers;
+      excelRows = parsed.rows;
+      headerStartRow = parsed.startRow;
+      parsedSheetName = useSheet;
 
-      const rawHeaders = (aoa[hdr] || []).map(h => String(h).trim());
-      const headersLocal = rawHeaders.map((h, idx) => h || `__COL_${idx}`);
+      // 자동탐지
+      autoNameCol = guessNameCol(headers, excelRows);
+      autoTaskCol = guessTaskCol(headers);
 
-      const rows = [];
-      for(let r=hdr+1; r<aoa.length; r++){
-        const arr = aoa[r] || [];
-        const obj = {};
-        headersLocal.forEach((h,c) => obj[h] = arr[c] ?? "");
-        if(!isEmptyRow(obj)) rows.push(obj);
-      }
-
-      // __COL_x 빈 헤더 제거
-      const cleanedRows = rows.map(row => {
-        const obj = {};
-        for(const [k,v] of Object.entries(row)){
-          if(!k.startsWith("__COL_")) obj[k] = v;
-        }
-        return obj;
+      // 컬럼 선택 드롭다운 갱신
+      nameColSelect.innerHTML = `<option value="">-- 자동: ${autoNameCol || "없음"} --</option>`;
+      taskColSelect.innerHTML = `<option value="">-- 자동: ${autoTaskCol || "없음"} --</option>`;
+      headers.forEach(h=>{
+        const o1 = document.createElement("option");
+        o1.value = h; o1.textContent = h; nameColSelect.appendChild(o1);
+        const o2 = document.createElement("option");
+        o2.value = h; o2.textContent = h; taskColSelect.appendChild(o2);
       });
 
-      const cleanedHeaders = headersLocal.filter(h => !h.startsWith("__COL_"));
+      // 학생 목록
+      studentSelect.innerHTML = `<option value="">-- 수강생 선택 --</option>`;
+      const tcol = getSelectedTaskCol();
+      excelRows.forEach((r,i)=>{
+        const n = getName(r) || `행${i+1}`;
+        const t = tcol ? String(r[tcol] ?? "").trim().slice(0,30) : "";
+        const op = document.createElement("option");
+        op.value = i;
+        op.textContent = `${n} | ${t}`;
+        studentSelect.appendChild(op);
+      });
 
-      return { rows: cleanedRows, headers: cleanedHeaders, headerRowIdx: hdr };
+      document.getElementById("excelMsg").innerHTML =
+        `✅ ${excelFileRef.name} / ${excelRows.length}명 로드 (시트: ${useSheet}, 헤더행: ${headerStartRow+1}, 모드:${headerMode.value})`;
+
+      updateMappingInfo();
+      updateButtons();
     }
 
-    // ---------------- UI 상태 ----------------
-    function updateButtons(){
-      btnLoadPdf.disabled = !(excelRows.length && pdfFile.files.length);
-      btnCompare.disabled = !(pdfAllText.length && studentSelect.value !== "");
-      btnCompareAll.disabled = !(pdfAllText.length && excelRows.length);
-    }
-
-    // ---------------- 이벤트 ----------------
-    excelFile.addEventListener("change", async () => {
-      const f = excelFile.files[0];
-      if(!f) return;
-
-      try{
-        document.getElementById("excelMsg").textContent = "엑셀 분석 중...";
-        const smart = await loadExcelSmart(f);
-
-        excelRows = smart.rows;
-        headers = smart.headers;
-        headerRowIdx = smart.headerRowIdx;
-
-        studentSelect.innerHTML = `<option value="">-- 수강생 선택 --</option>`;
-        const nameCol = pickNameColumn();
-        const taskCol = pickTaskColumn();
-
-        excelRows.forEach((r, i) => {
-          const name = (nameCol ? String(r[nameCol] ?? "").trim() : "") || `행${i+1}`;
-          const task = taskCol ? String(r[taskCol] ?? "").trim().slice(0, 30) : "";
-          const opt = document.createElement("option");
-          opt.value = i;
-          opt.textContent = `${name} | ${task}`;
-          studentSelect.appendChild(opt);
-        });
-
-        document.getElementById("excelMsg").innerHTML =
-          `✅ ${f.name} / ${excelRows.length}명 로드 (헤더행: ${headerRowIdx+1})`;
-
-        statusEl.innerHTML =
-          `<span class="ok">엑셀 로드 완료</span> <span class="small">| 이름컬럼: ${pickNameColumn() || "(미탐지)"} / 과제컬럼: ${pickTaskColumn() || "(미탐지)"}</span>`;
-      }catch(e){
-        document.getElementById("excelMsg").innerHTML = `<span class="err">엑셀 로드 실패: ${e.message}</span>`;
-        statusEl.innerHTML = `<span class="err">엑셀 파싱 실패</span>`;
-        excelRows = []; headers = [];
-      }
-
-      updateButtons();
-    });
-
-    pdfFile.addEventListener("change", () => {
+    // ----------------- PDF 파싱 -----------------
+    async function parsePdfText(){
       const f = pdfFile.files[0];
       if(!f) return;
-      document.getElementById("pdfMsg").textContent = `선택: ${f.name}`;
-      updateButtons();
-    });
 
-    studentSelect.addEventListener("change", updateButtons);
-
-    btnLoadPdf.addEventListener("click", async () => {
-      const f = pdfFile.files[0];
-      if(!f) return alert("PDF를 선택하세요.");
       statusEl.innerHTML = `<span class="warn">PDF 텍스트 추출 중...</span>`;
       pdfPages = [];
       pdfAllText = "";
@@ -361,8 +491,8 @@
         for(let p=1; p<=pdf.numPages; p++){
           const page = await pdf.getPage(p);
           const tc = await page.getTextContent();
-          const text = tc.items.map(x => x.str).join(" ");
-          pdfPages.push({ page: p, text });
+          const text = tc.items.map(x=>x.str).join(" ");
+          pdfPages.push({ page:p, text });
           pdfAllText += "\n" + text;
 
           if(p % 5 === 0) statusEl.textContent = `PDF 추출 진행: ${p}/${pdf.numPages}`;
@@ -375,109 +505,135 @@
       }
 
       updateButtons();
-    });
-
-    // ---------------- 학생별 섹션 추출 ----------------
-    function findStudentSection(row){
-      const name = pickName(row);
-      const taskCol = pickTaskColumn();
-      const task = taskCol ? String(row[taskCol] ?? "").trim() : "";
-
-      // 1순위: 이름 포함 페이지
-      let hits = [];
-      if(name){
-        hits = pdfPages.filter(p => p.text.includes(name));
-      }
-
-      // 2순위: 과제명 앞 12글자 포함 페이지
-      if(!hits.length && task){
-        const tk = task.replace(/\s+/g, " ").slice(0, 12);
-        if(tk) hits = pdfPages.filter(p => p.text.includes(tk));
-      }
-
-      if(hits.length){
-        const picked = hits.slice(0, 4);
-        return {
-          text: picked.map(h => h.text).join(" "),
-          where: `페이지 ${picked.map(h => h.page).join(", ")}`,
-          confidence: "high"
-        };
-      }
-
-      // 3순위 fallback: 전체 PDF
-      return {
-        text: pdfAllText,
-        where: "전체 PDF (이름/과제명 페이지 매칭 실패)",
-        confidence: "low"
-      };
     }
 
-    // ---------------- 비교 ----------------
-    function compareOne(row){
-      const sec = findStudentSection(row);
+    // ----------------- 통합 PDF 학생 구간 분리 -----------------
+    function buildStudentSections(){
+      // 이름 목록
+      const names = excelRows
+        .map(r => getName(r))
+        .filter(Boolean)
+        .map(n => n.replace(/\s+/g, " ").trim());
+
+      // 페이지별 원문 합쳐서 하나의 큰 텍스트 만들기
+      const whole = pdfAllText || "";
+      const points = [];
+
+      // 이름 위치 수집(중복 제거)
+      const uniq = [...new Set(names)];
+      uniq.forEach(name => {
+        if(name.length < 2) return;
+        const idx = whole.indexOf(name);
+        if(idx !== -1) points.push({ name, idx });
+      });
+
+      points.sort((a,b)=>a.idx-b.idx);
+
+      const sections = {}; // {name: text}
+      for(let i=0;i<points.length;i++){
+        const cur = points[i];
+        const next = points[i+1];
+        const s = cur.idx;
+        const e = next ? next.idx : whole.length;
+        sections[cur.name] = whole.substring(s,e);
+      }
+      return sections;
+    }
+
+    function findStudentSection(row, sections){
+      const name = getName(row);
+      const taskCol = getSelectedTaskCol();
+      const task = taskCol ? String(row[taskCol] ?? "").trim() : "";
+
+      // 1순위: 섹션 맵
+      if(name && sections[name]){
+        return { text: sections[name], where: `이름기반 구간(${name})`, confidence:"high" };
+      }
+
+      // 2순위: 이름 포함 페이지
+      if(name){
+        const hits = pdfPages.filter(p => p.text.includes(name));
+        if(hits.length){
+          const pick = hits.slice(0,4);
+          return {
+            text: pick.map(x=>x.text).join(" "),
+            where: `페이지 ${pick.map(x=>x.page).join(", ")}`,
+            confidence:"mid"
+          };
+        }
+      }
+
+      // 3순위: 과제명 키워드
+      if(task){
+        const tk = task.replace(/\s+/g," ").slice(0,12);
+        const hits = pdfPages.filter(p => p.text.includes(tk));
+        if(hits.length){
+          const pick = hits.slice(0,4);
+          return {
+            text: pick.map(x=>x.text).join(" "),
+            where: `과제명 기반 페이지 ${pick.map(x=>x.page).join(", ")}`,
+            confidence:"mid"
+          };
+        }
+      }
+
+      // fallback
+      return { text: pdfAllText, where:"전체 PDF fallback", confidence:"low" };
+    }
+
+    // ----------------- 비교 로직 -----------------
+    function compareOne(row, sections){
+      const name = getName(row) || "(이름없음)";
+      const sec = findStudentSection(row, sections);
       const base = sec.text;
       const details = [];
 
       for(const field of fields){
-        const col = findCol(field);
+        const col = findColSmart(field);
         const ev = col ? String(row[col] ?? "").trim() : "";
         const pv = extractNear(base, fieldKeywords(field), 900);
 
         if(!ev){
-          details.push({ field, status:"missing_excel", note:"엑셀값 없음", ev:"", pv:"", score:0 });
+          details.push({ field, col: col||"(미매핑)", status:"missing_excel", note:"엑셀값 없음", ev:"", pv:"", score:0 });
           continue;
         }
         if(!pv){
-          details.push({ field, status:"missing_pdf", note:"PDF 항목 미발견", ev, pv:"", score:0 });
+          details.push({ field, col: col||"(미매핑)", status:"missing_pdf", note:"PDF 항목 미발견", ev, pv:"", score:0 });
           continue;
         }
 
-        // 타입별 판정
+        // exact
         if(field === "과제명" || field === "진행률"){
           const en = normalize(ev), pn = normalize(pv);
           if(en === pn){
-            details.push({ field, status:"match", note:"정확 일치", ev, pv, score:1 });
+            details.push({ field, col, status:"match", note:"정확 일치", ev, pv, score:1 });
           }else if(pn.includes(en) || en.includes(pn)){
-            details.push({ field, status:"similar", note:"부분 일치", ev, pv, score:0.7 });
+            details.push({ field, col, status:"similar", note:"부분 일치", ev, pv, score:0.7 });
           }else{
             const sc = tokenRatio(ev, pv);
-            details.push({
-              field,
-              status: sc >= 0.45 ? "similar" : "mismatch",
-              note: `유사도 ${Math.round(sc*100)}%`,
-              ev, pv, score: sc
-            });
+            details.push({ field, col, status: sc>=0.45?"similar":"mismatch", note:`유사도 ${Math.round(sc*100)}%`, ev, pv, score:sc });
           }
           continue;
         }
 
-        if(
-          field.includes("문제 인식") ||
-          field.includes("솔루션 설계") ||
-          field.includes("LLM 활용") ||
-          field.includes("검증 및 개선") ||
-          field.includes("프로젝트")
-        ){
+        // level
+        if(field.includes("문제 인식") || field.includes("솔루션 설계") || field.includes("LLM 활용") || field.includes("검증 및 개선") || field.includes("프로젝트")){
           const eL = findLevel(ev), pL = findLevel(pv);
           if(eL && pL && eL === pL){
-            details.push({ field, status:"match", note:`등급 일치: ${eL}`, ev, pv, score:1 });
+            details.push({ field, col, status:"match", note:`등급 일치: ${eL}`, ev, pv, score:1 });
           }else if(eL && pL){
-            details.push({ field, status:"mismatch", note:`등급 불일치 (엑셀:${eL}/PDF:${pL})`, ev, pv, score:0 });
+            details.push({ field, col, status:"mismatch", note:`등급 불일치 (엑셀:${eL}/PDF:${pL})`, ev, pv, score:0 });
           }else{
             const sc = tokenRatio(ev, pv);
-            details.push({
-              field,
-              status: sc >= 0.35 ? "similar" : "mismatch",
-              note: `등급 판독 애매, 유사도 ${Math.round(sc*100)}%`,
-              ev, pv, score: sc
-            });
+            details.push({ field, col, status: sc>=0.35?"similar":"mismatch", note:`등급 판독 애매, 유사도 ${Math.round(sc*100)}%`, ev, pv, score:sc });
           }
           continue;
         }
 
+        // semantic
         const sc = tokenRatio(ev, pv);
-        const st = sc >= 0.55 ? "match" : sc >= 0.25 ? "similar" : "mismatch";
-        details.push({ field, status:st, note:`유사도 ${Math.round(sc*100)}%`, ev, pv, score: sc });
+        const st = sc>=0.55 ? "match" : sc>=0.25 ? "similar" : "mismatch";
+        details.push({ field, col, status:st, note:`유사도 ${Math.round(sc*100)}%`, ev, pv, score:sc });
       }
 
       const summary = {
@@ -488,13 +644,7 @@
         missing_excel: details.filter(x=>x.status==="missing_excel").length,
       };
 
-      return {
-        name: pickName(row) || "(이름없음)",
-        where: sec.where,
-        confidence: sec.confidence,
-        details,
-        summary
-      };
+      return { name, where: sec.where, confidence: sec.confidence, details, summary };
     }
 
     function badge(st){
@@ -519,21 +669,22 @@
         <table>
           <thead>
             <tr>
-              <th style="width:18%">항목</th>
-              <th style="width:12%">판정</th>
-              <th style="width:27%">엑셀 값</th>
-              <th style="width:27%">PDF 근거</th>
-              <th style="width:16%">비고</th>
+              <th style="width:16%">항목</th>
+              <th style="width:14%">엑셀컬럼</th>
+              <th style="width:10%">판정</th>
+              <th style="width:24%">엑셀 값</th>
+              <th style="width:24%">PDF 근거</th>
+              <th style="width:12%">비고</th>
             </tr>
           </thead>
           <tbody>
       `;
-
-      res.details.forEach(d => {
+      res.details.forEach(d=>{
         const bar = `<div class="pbar"><div class="pfill" style="width:${Math.round((d.score||0)*100)}%"></div></div>`;
         html += `
           <tr>
             <td><b>${d.field}</b></td>
+            <td class="small">${d.col || "(미매핑)"}</td>
             <td>${badge(d.status)}${bar}</td>
             <td><div class="txt">${(d.ev || "(없음)").slice(0,1200)}</div></td>
             <td><div class="txt">${(d.pv || "(없음)").slice(0,1200)}</div></td>
@@ -541,68 +692,133 @@
           </tr>
         `;
       });
-
       html += `</tbody></table>`;
       resultEl.innerHTML = html;
     }
 
-    // ---------------- 버튼 액션 ----------------
-    btnCompare.addEventListener("click", () => {
-      const idx = parseInt(studentSelect.value, 10);
+    function renderAll(all){
+      const ranked = all.map(x=>{
+        const score = (x.summary.match*2) + (x.summary.similar) - (x.summary.mismatch*2) - x.summary.missing_pdf;
+        return {...x, rankScore:score};
+      }).sort((a,b)=>a.rankScore-b.rankScore);
+
+      let html = `<h3 style="margin:0 0 8px">전체 수강생 일괄 비교 (문제 큰 순)</h3>`;
+      html += `<table><thead><tr>
+        <th>수강생</th><th>일치</th><th>유사</th><th>불일치</th><th>PDF미발견</th><th>엑셀없음</th><th>점수</th><th>섹션매칭</th>
+      </tr></thead><tbody>`;
+      ranked.forEach(x=>{
+        html += `<tr>
+          <td>${x.name}</td>
+          <td>${x.summary.match}</td>
+          <td>${x.summary.similar}</td>
+          <td style="color:#991b1b;font-weight:700">${x.summary.mismatch}</td>
+          <td>${x.summary.missing_pdf}</td>
+          <td>${x.summary.missing_excel}</td>
+          <td>${x.rankScore}</td>
+          <td>${x.confidence}</td>
+        </tr>`;
+      });
+      html += `</tbody></table>
+        <div class="muted" style="margin-top:8px">※ 상세는 수강생 선택 후 "선택 수강생 비교"를 눌러 확인하세요.</div>`;
+      resultEl.innerHTML = html;
+    }
+
+    // ----------------- 이벤트 -----------------
+    excelFile.addEventListener("change", async ()=>{
+      const f = excelFile.files[0];
+      if(!f) return;
+
+      excelFileRef = f;
+      document.getElementById("excelMsg").textContent = "엑셀 분석 중...";
+
+      // 시트 목록 초기화 위해 1회 읽기
+      const buf = await f.arrayBuffer();
+      const wb = XLSX.read(buf, { type:"array" });
+      allSheets = wb.SheetNames;
+
+      sheetSelect.innerHTML = "";
+      allSheets.forEach((s,idx)=>{
+        const op = document.createElement("option");
+        op.value = s;
+        op.textContent = idx===0 ? `${s} (기본)` : s;
+        sheetSelect.appendChild(op);
+      });
+
+      await parseExcelFromCurrentOptions();
+      statusEl.innerHTML = `<span class="ok">엑셀 로드 완료</span>`;
+    });
+
+    pdfFile.addEventListener("change", ()=>{
+      const f = pdfFile.files[0];
+      if(!f) return;
+      document.getElementById("pdfMsg").textContent = `선택: ${f.name}`;
+      updateButtons();
+    });
+
+    btnReloadExcel.addEventListener("click", async ()=>{
+      if(!excelFileRef) return;
+      statusEl.innerHTML = `<span class="warn">엑셀 재파싱 중...</span>`;
+      await parseExcelFromCurrentOptions();
+      statusEl.innerHTML = `<span class="ok">엑셀 재파싱 완료</span>`;
+    });
+
+    [nameColSelect, taskColSelect].forEach(el => {
+      el.addEventListener("change", ()=>{
+        // 수강생 목록 다시 렌더
+        const tcol = getSelectedTaskCol();
+        studentSelect.innerHTML = `<option value="">-- 수강생 선택 --</option>`;
+        excelRows.forEach((r,i)=>{
+          const n = getName(r) || `행${i+1}`;
+          const t = tcol ? String(r[tcol] ?? "").trim().slice(0,30) : "";
+          const op = document.createElement("option");
+          op.value = i;
+          op.textContent = `${n} | ${t}`;
+          studentSelect.appendChild(op);
+        });
+        updateMappingInfo();
+        updateButtons();
+      });
+    });
+
+    sheetSelect.addEventListener("change", async ()=>{
+      if(!excelFileRef) return;
+      statusEl.innerHTML = `<span class="warn">시트 변경 파싱 중...</span>`;
+      await parseExcelFromCurrentOptions();
+      statusEl.innerHTML = `<span class="ok">시트 변경 완료</span>`;
+    });
+
+    headerMode.addEventListener("change", async ()=>{
+      if(!excelFileRef) return;
+      statusEl.innerHTML = `<span class="warn">헤더 모드 변경 파싱 중...</span>`;
+      await parseExcelFromCurrentOptions();
+      statusEl.innerHTML = `<span class="ok">헤더 모드 적용 완료</span>`;
+    });
+
+    btnLoadPdf.addEventListener("click", async ()=>{
+      await parsePdfText();
+    });
+
+    studentSelect.addEventListener("change", updateButtons);
+
+    btnCompare.addEventListener("click", ()=>{
+      const idx = parseInt(studentSelect.value,10);
       if(isNaN(idx)) return alert("수강생을 선택하세요.");
+      if(!getSelectedNameCol()) return alert("이름 컬럼을 지정해주세요.");
+
+      const sections = buildStudentSections();
       const row = excelRows[idx];
-      const res = compareOne(row);
+      const res = compareOne(row, sections);
       renderOne(res);
     });
 
-    btnCompareAll.addEventListener("click", () => {
+    btnCompareAll.addEventListener("click", ()=>{
       if(!excelRows.length) return;
+      if(!getSelectedNameCol()) return alert("이름 컬럼을 지정해주세요.");
+
       statusEl.innerHTML = `<span class="warn">전체 비교 중...</span>`;
-
-      const all = excelRows.map(r => compareOne(r));
-      const ranked = all.map(x => {
-        const score = (x.summary.match*2) + (x.summary.similar) - (x.summary.mismatch*2) - (x.summary.missing_pdf);
-        return { ...x, rankScore: score };
-      }).sort((a,b) => a.rankScore - b.rankScore); // 문제 큰 순
-
-      let html = `<h3 style="margin:0 0 8px">전체 수강생 일괄 비교 (문제 큰 순)</h3>`;
-      html += `
-        <table>
-          <thead>
-            <tr>
-              <th>수강생</th>
-              <th>일치</th>
-              <th>유사</th>
-              <th>불일치</th>
-              <th>PDF미발견</th>
-              <th>엑셀없음</th>
-              <th>점수</th>
-              <th>섹션매칭</th>
-            </tr>
-          </thead><tbody>
-      `;
-
-      ranked.forEach(x => {
-        html += `
-          <tr>
-            <td>${x.name}</td>
-            <td>${x.summary.match}</td>
-            <td>${x.summary.similar}</td>
-            <td style="color:#991b1b;font-weight:700">${x.summary.mismatch}</td>
-            <td>${x.summary.missing_pdf}</td>
-            <td>${x.summary.missing_excel}</td>
-            <td>${x.rankScore}</td>
-            <td>${x.confidence}</td>
-          </tr>
-        `;
-      });
-
-      html += `</tbody></table>
-        <div class="muted" style="margin-top:8px">
-          ※ 상세 결과는 수강생을 선택한 뒤 "선택 수강생 비교"를 눌러 확인하세요.
-        </div>
-      `;
-      resultEl.innerHTML = html;
+      const sections = buildStudentSections();
+      const all = excelRows.map(r => compareOne(r, sections));
+      renderAll(all);
       statusEl.innerHTML = `<span class="ok">전체 비교 완료 (${all.length}명)</span>`;
     });
   </script>
