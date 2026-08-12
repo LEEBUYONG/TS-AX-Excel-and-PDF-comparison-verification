@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>엑셀 vs 통합 PDF 비교기 (완성본)</title>
+  <title>엑셀 vs PDF 비교기 v2</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <style>
@@ -61,10 +61,14 @@
       margin-top:8px; padding:8px 10px; border-radius:8px;
       background:#fffbeb; border:1px solid #fde68a; color:#92400e; font-size:12px;
     }
+    .modebox{
+      margin-top:8px; padding:8px 10px; border-radius:8px;
+      background:#f0fdf4; border:1px solid #bbf7d0; color:#166534; font-size:12px;
+    }
   </style>
 </head>
 <body>
-  <header><h1>📊 엑셀 vs 통합 PDF 비교기 (통합PDF/2줄헤더 대응 완성본)</h1></header>
+  <header><h1>📊 엑셀 vs PDF 비교기 v2 (기준표 오염 차단)</h1></header>
 
   <div class="wrap">
     <!-- 업로드 -->
@@ -75,22 +79,22 @@
         <div class="muted" id="excelMsg">엑셀 파일을 선택하세요</div>
       </div>
       <div>
-        <label>통합 PDF 파일 (전체 수강생 포함)</label>
+        <label>PDF 파일</label>
         <input id="pdfFile" type="file" accept=".pdf"/>
         <div class="muted" id="pdfMsg">PDF 파일을 선택하세요</div>
       </div>
     </div>
 
-    <!-- 매핑 설정 -->
+    <!-- 설정 -->
     <div class="card">
       <div class="grid4">
         <div>
-          <label>이름 컬럼 (수동 선택 가능)</label>
-          <select id="nameColSelect"><option value="">-- 자동탐지/선택 --</option></select>
-        </div>
-        <div>
-          <label>과제명 컬럼 (수동 선택 가능)</label>
-          <select id="taskColSelect"><option value="">-- 자동탐지/선택 --</option></select>
+          <label>PDF 모드</label>
+          <select id="pdfMode">
+            <option value="auto" selected>자동 감지</option>
+            <option value="single">단일 수강생 PDF</option>
+            <option value="merged">통합 PDF(다수 수강생)</option>
+          </select>
         </div>
         <div>
           <label>시트 선택</label>
@@ -104,25 +108,47 @@
             <option value="double">2줄 헤더 병합</option>
           </select>
         </div>
+        <div>
+          <label>기준표 페이지 제외</label>
+          <select id="excludeRefMode">
+            <option value="on" selected>ON (권장)</option>
+            <option value="off">OFF</option>
+          </select>
+        </div>
       </div>
-      <div class="info" id="mappingInfo">컬럼 매핑 상태가 여기에 표시됩니다.</div>
+
+      <div class="grid4" style="margin-top:10px;">
+        <div>
+          <label>이름 컬럼 (수동 선택 가능)</label>
+          <select id="nameColSelect"><option value="">-- 자동탐지/선택 --</option></select>
+        </div>
+        <div>
+          <label>과제명 컬럼 (수동 선택 가능)</label>
+          <select id="taskColSelect"><option value="">-- 자동탐지/선택 --</option></select>
+        </div>
+        <div>
+          <label>수강생 선택</label>
+          <select id="studentSelect"><option value="">-- 엑셀 업로드 후 선택 --</option></select>
+        </div>
+        <div style="display:flex; align-items:flex-end;">
+          <button id="btnReloadExcel" disabled style="width:100%;">엑셀 다시 파싱</button>
+        </div>
+      </div>
+
+      <div class="info" id="mappingInfo">매핑 상태가 여기에 표시됩니다.</div>
+      <div class="modebox" id="pdfModeInfo">PDF 모드: 대기</div>
     </div>
 
     <!-- 실행 -->
     <div class="card">
       <div class="row">
-        <div style="min-width:360px;flex:1">
-          <label>수강생 선택</label>
-          <select id="studentSelect"><option value="">-- 엑셀 업로드 후 선택 --</option></select>
-        </div>
-        <div style="padding-top:18px"><button id="btnReloadExcel" disabled>엑셀 다시 파싱</button></div>
-        <div style="padding-top:18px"><button id="btnLoadPdf" disabled>PDF 텍스트 추출</button></div>
-        <div style="padding-top:18px"><button id="btnCompare" disabled>선택 수강생 비교</button></div>
-        <div style="padding-top:18px"><button id="btnCompareAll" disabled>전체 수강생 일괄 비교</button></div>
+        <button id="btnLoadPdf" disabled>PDF 텍스트 추출</button>
+        <button id="btnCompare" disabled>선택 수강생 비교</button>
+        <button id="btnCompareAll" disabled>전체 수강생 일괄 비교</button>
       </div>
       <div id="status" class="muted" style="margin-top:8px">대기 중</div>
       <div class="warnbox">
-        ⚠️ 브라우저 단독 버전입니다. 스캔 이미지 PDF는 정확도가 낮을 수 있습니다.
+        ⚠️ v2: <b>Reference Guide(평가기준표) 오염 차단</b>, 페이지 성격 분류(프로필/과제/기준표), 단일·통합 모드 분리.
       </div>
     </div>
 
@@ -133,19 +159,19 @@
   <script>
     pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
 
-    // 전역 상태
+    // ---------------- 상태 ----------------
     let excelRows = [];
     let headers = [];
-    let pdfPages = [];
+    let pdfPages = []; // [{page, text}]
     let pdfAllText = "";
     let allSheets = [];
     let excelFileRef = null;
     let headerStartRow = 0;
     let parsedSheetName = "";
 
-    // 자동/수동 컬럼 선택
     let autoNameCol = "";
     let autoTaskCol = "";
+    let detectedPdfMode = "auto"; // single or merged after parse
 
     const fields = [
       "과제명",
@@ -164,14 +190,17 @@
     ];
     const levels = ["보통","우수","탁월","초급","중급","고급","전문가"];
 
-    // UI
+    // ---------------- UI ----------------
     const excelFile = document.getElementById("excelFile");
     const pdfFile = document.getElementById("pdfFile");
+    const pdfMode = document.getElementById("pdfMode");
+    const excludeRefMode = document.getElementById("excludeRefMode");
     const nameColSelect = document.getElementById("nameColSelect");
     const taskColSelect = document.getElementById("taskColSelect");
     const sheetSelect = document.getElementById("sheetSelect");
     const headerMode = document.getElementById("headerMode");
     const mappingInfo = document.getElementById("mappingInfo");
+    const pdfModeInfo = document.getElementById("pdfModeInfo");
     const studentSelect = document.getElementById("studentSelect");
     const btnReloadExcel = document.getElementById("btnReloadExcel");
     const btnLoadPdf = document.getElementById("btnLoadPdf");
@@ -180,7 +209,7 @@
     const statusEl = document.getElementById("status");
     const resultEl = document.getElementById("result");
 
-    // ----------------- 유틸 -----------------
+    // ---------------- 유틸 ----------------
     function cleanKey(s){
       return String(s || "")
         .replace(/\s+/g, "")
@@ -208,6 +237,7 @@
     function isEmptyRow(obj){
       return Object.values(obj).every(v => String(v ?? "").trim() === "");
     }
+
     function extractNear(text, keywords, window=900){
       if(typeof keywords === "string") keywords = [keywords];
       for(const kw of keywords){
@@ -260,15 +290,12 @@
       return 0;
     }
 
-    // 2줄 헤더가 의미있는지 판정
     function shouldUseDoubleHeader(aoa, start){
-      const h1 = (aoa[start]||[]).map(v=>String(v).trim());
-      const h2 = (aoa[start+1]||[]).map(v=>String(v).trim());
-      const h1Text = h1.join(" ");
-      const h2Text = h2.join(" ");
-      const hasGroupWords = /수료생 기본 정보|학습 성과 평가 결과|주요 활용 기술|AI 문제 해결 역량|실무 응용력|과제 수행|종합 제언|Key Highlights/.test(h1Text);
-      const hasDetailWords = /성함|과제명|입과 평가|1차 성과 평가|문제 인식|솔루션 설계|LLM 활용|검증 및 개선|과제 상세|진행률/.test(h2Text);
-      return hasGroupWords || hasDetailWords;
+      const h1 = (aoa[start]||[]).map(v=>String(v).trim()).join(" ");
+      const h2 = (aoa[start+1]||[]).map(v=>String(v).trim()).join(" ");
+      const hasGroup = /수료생 기본 정보|학습 성과 평가 결과|AI 문제 해결 역량|실무 응용력|과제 수행|종합 제언/.test(h1);
+      const hasDetail = /성함|과제명|문제 인식|솔루션 설계|LLM 활용|검증 및 개선|과제 상세|진행률/.test(h2);
+      return hasGroup || hasDetail;
     }
 
     function parseWithMode(aoa, mode){
@@ -283,7 +310,6 @@
         hdr = buildMergedHeaders(aoa[start]||[], aoa[start+1]||[]);
         dataStart = start + 2;
       } else {
-        // auto
         const useDouble = shouldUseDoubleHeader(aoa, start);
         if(useDouble){
           hdr = buildMergedHeaders(aoa[start]||[], aoa[start+1]||[]);
@@ -312,21 +338,18 @@
         if(has) rows.push(obj);
       }
 
-      return { headers: headersLocal, rows, startRow: start, dataStartRow: dataStart };
+      return { headers: headersLocal, rows, startRow: start };
     }
 
     function findColSmart(target){
       const t = cleanKey(target);
 
-      // 1) 정확
       let hit = headers.find(h => cleanKey(h) === t);
       if(hit) return hit;
 
-      // 2) 포함
       hit = headers.find(h => cleanKey(h).includes(t) || t.includes(cleanKey(h)));
       if(hit) return hit;
 
-      // 3) tail 비교: "그룹|세부"에서 세부만 비교
       hit = headers.find(h => {
         const tail = h.includes("|") ? h.split("|").pop() : h;
         const ct = cleanKey(tail);
@@ -334,7 +357,6 @@
       });
       if(hit) return hit;
 
-      // 4) 별칭
       const alias = {
         "문제인식및정의":["문제정의","문제인식","문제인식정의"],
         "솔루션설계":["해결방안설계","해결설계","설계"],
@@ -359,19 +381,13 @@
     }
 
     function guessNameCol(headersLocal, rowsLocal){
-      // 헤더 이름 기반 우선
       let c = headersLocal.find(h => /성함|성명|이름/.test(h));
       if(c) return c;
 
-      c = headersLocal.find(h => /수료생 기본 정보\|성함|수료생기본정보\|성함/i.test(cleanKey(h)));
-      if(c) return c;
-
-      // 값 패턴 기반 (한글 이름 2~4자 비율)
       let best = null, bestScore = -1;
       headersLocal.forEach(h=>{
         const vals = rowsLocal.map(r=>String(r[h]??"").trim()).filter(Boolean).slice(0,40);
-        if(!vals.length) return;
-        const score = vals.filter(v => /^[가-힣]{2,4}$/.test(v)).length;
+        const score = vals.filter(v=>/^[가-힣]{2,4}$/.test(v)).length;
         if(score > bestScore){ bestScore = score; best = h; }
       });
       return best || headersLocal[0] || "";
@@ -381,13 +397,8 @@
       return headersLocal.find(h => /과제명/.test(h)) || "";
     }
 
-    function getSelectedNameCol(){
-      return nameColSelect.value || autoNameCol;
-    }
-    function getSelectedTaskCol(){
-      return taskColSelect.value || autoTaskCol;
-    }
-
+    function getSelectedNameCol(){ return nameColSelect.value || autoNameCol; }
+    function getSelectedTaskCol(){ return taskColSelect.value || autoTaskCol; }
     function getName(row){
       const c = getSelectedNameCol();
       return c ? String(row[c] ?? "").trim() : "";
@@ -396,13 +407,12 @@
     function updateMappingInfo(){
       const nc = getSelectedNameCol();
       const tc = getSelectedTaskCol();
-      mappingInfo.innerHTML = `
-        <b>현재 매핑</b> |
-        이름컬럼: <b>${nc || "(미지정)"}</b> |
-        과제컬럼: <b>${tc || "(미지정)"}</b> |
-        시트: <b>${parsedSheetName || "(미지정)"}</b> |
-        헤더시작행: <b>${headerStartRow+1}</b>
-      `;
+      mappingInfo.innerHTML =
+        `<b>현재 매핑</b> | 이름컬럼: <b>${nc || "(미지정)"}</b> | 과제컬럼: <b>${tc || "(미지정)"}</b> | 시트: <b>${parsedSheetName || "(미지정)"}</b> | 헤더시작행: <b>${headerStartRow+1}</b>`;
+    }
+
+    function updatePdfModeInfo(msg){
+      pdfModeInfo.innerHTML = msg;
     }
 
     function updateButtons(){
@@ -412,7 +422,7 @@
       btnCompareAll.disabled = !(pdfAllText.length && excelRows.length && getSelectedNameCol());
     }
 
-    // ----------------- 엑셀 파싱 -----------------
+    // ---------------- 엑셀 ----------------
     async function parseExcelFromCurrentOptions(){
       if(!excelFileRef) return;
 
@@ -420,13 +430,12 @@
       const wb = XLSX.read(buf, { type: "array" });
       allSheets = wb.SheetNames;
 
-      // 시트 셀렉트 채우기
       if(!sheetSelect.dataset.inited){
         sheetSelect.innerHTML = "";
         allSheets.forEach((s,idx)=>{
           const op = document.createElement("option");
           op.value = s;
-          op.textContent = idx === 0 ? `${s} (기본)` : s;
+          op.textContent = idx===0 ? `${s} (기본)` : s;
           sheetSelect.appendChild(op);
         });
         sheetSelect.dataset.inited = "1";
@@ -442,11 +451,9 @@
       headerStartRow = parsed.startRow;
       parsedSheetName = useSheet;
 
-      // 자동탐지
       autoNameCol = guessNameCol(headers, excelRows);
       autoTaskCol = guessTaskCol(headers);
 
-      // 컬럼 선택 드롭다운 갱신
       nameColSelect.innerHTML = `<option value="">-- 자동: ${autoNameCol || "없음"} --</option>`;
       taskColSelect.innerHTML = `<option value="">-- 자동: ${autoTaskCol || "없음"} --</option>`;
       headers.forEach(h=>{
@@ -456,9 +463,18 @@
         o2.value = h; o2.textContent = h; taskColSelect.appendChild(o2);
       });
 
-      // 학생 목록
-      studentSelect.innerHTML = `<option value="">-- 수강생 선택 --</option>`;
+      rebuildStudentSelect();
+
+      document.getElementById("excelMsg").innerHTML =
+        `✅ ${excelFileRef.name} / ${excelRows.length}명 로드 (시트:${useSheet}, 헤더행:${headerStartRow+1}, 모드:${headerMode.value})`;
+
+      updateMappingInfo();
+      updateButtons();
+    }
+
+    function rebuildStudentSelect(){
       const tcol = getSelectedTaskCol();
+      studentSelect.innerHTML = `<option value="">-- 수강생 선택 --</option>`;
       excelRows.forEach((r,i)=>{
         const n = getName(r) || `행${i+1}`;
         const t = tcol ? String(r[tcol] ?? "").trim().slice(0,30) : "";
@@ -467,15 +483,50 @@
         op.textContent = `${n} | ${t}`;
         studentSelect.appendChild(op);
       });
-
-      document.getElementById("excelMsg").innerHTML =
-        `✅ ${excelFileRef.name} / ${excelRows.length}명 로드 (시트: ${useSheet}, 헤더행: ${headerStartRow+1}, 모드:${headerMode.value})`;
-
-      updateMappingInfo();
-      updateButtons();
     }
 
-    // ----------------- PDF 파싱 -----------------
+    // ---------------- PDF ----------------
+    function classifyPages(pages){
+      const prof=[], task=[], ref=[], unknown=[];
+
+      pages.forEach(p=>{
+        const t = p.text || "";
+
+        const isRef =
+          /Reference Guide|AI 역량 평가 기준|기술계 평가 기준|평가 기준표|3\s*\/\s*3/.test(t);
+
+        const isTask =
+          /과제수행 및 종합 제언|과제 정보 및 진행 상황|현업 적용 계획 및 활용 방안|종합 제언|2\s*\/\s*3/.test(t);
+
+        const isProf =
+          /학습 성과 평가 결과|AI 문제 해결 역량|실무 응용력|수료생|입과 평가|1차 성과 평가|1\s*\/\s*3/.test(t);
+
+        if(isRef) ref.push(p);
+        else if(isTask) task.push(p);
+        else if(isProf) prof.push(p);
+        else unknown.push(p);
+      });
+
+      // unknown은 prof로 흡수(너무 비면)
+      if(!prof.length && unknown.length) prof.push(...unknown);
+
+      return { prof, task, ref, unknown };
+    }
+
+    function detectPdfModeAuto(pages){
+      // 이름 매칭 개수로 단일/통합 감지
+      const names = new Set(
+        excelRows.map(r=>getName(r)).filter(n=>n && n.length>=2)
+      );
+
+      let hit = 0;
+      const whole = pages.map(p=>p.text).join("\n");
+      names.forEach(n=>{ if(whole.includes(n)) hit++; });
+
+      // 경험적: 3개 이상 이름이면 통합 가능성 큼
+      return hit >= 3 ? "merged" : "single";
+    }
+
     async function parsePdfText(){
       const f = pdfFile.files[0];
       if(!f) return;
@@ -494,42 +545,40 @@
           const text = tc.items.map(x=>x.str).join(" ");
           pdfPages.push({ page:p, text });
           pdfAllText += "\n" + text;
-
           if(p % 5 === 0) statusEl.textContent = `PDF 추출 진행: ${p}/${pdf.numPages}`;
         }
+
+        const auto = detectPdfModeAuto(pdfPages);
+        detectedPdfMode = (pdfMode.value === "auto") ? auto : pdfMode.value;
+
+        const cls = classifyPages(pdfPages);
+        updatePdfModeInfo(
+          `PDF 모드: <b>${detectedPdfMode}</b> | 페이지 분류 → 프로필:${cls.prof.length}, 과제:${cls.task.length}, 기준표:${cls.ref.length}, 기타:${cls.unknown.length}`
+        );
 
         statusEl.innerHTML = `<span class="ok">PDF 추출 완료 (${pdf.numPages}페이지)</span>`;
       }catch(e){
         statusEl.innerHTML = `<span class="err">PDF 추출 실패: ${e.message}</span>`;
         pdfPages = []; pdfAllText = "";
       }
-
       updateButtons();
     }
 
-    // ----------------- 통합 PDF 학생 구간 분리 -----------------
-    function buildStudentSections(){
-      // 이름 목록
-      const names = excelRows
-        .map(r => getName(r))
-        .filter(Boolean)
-        .map(n => n.replace(/\s+/g, " ").trim());
-
-      // 페이지별 원문 합쳐서 하나의 큰 텍스트 만들기
+    // 통합PDF용: 이름 기준 구간 생성
+    function buildStudentSectionsMerged(){
+      const names = [...new Set(excelRows.map(r=>getName(r)).filter(Boolean))];
       const whole = pdfAllText || "";
       const points = [];
 
-      // 이름 위치 수집(중복 제거)
-      const uniq = [...new Set(names)];
-      uniq.forEach(name => {
+      names.forEach(name=>{
         if(name.length < 2) return;
         const idx = whole.indexOf(name);
-        if(idx !== -1) points.push({ name, idx });
+        if(idx !== -1) points.push({name, idx});
       });
 
       points.sort((a,b)=>a.idx-b.idx);
 
-      const sections = {}; // {name: text}
+      const sections = {};
       for(let i=0;i<points.length;i++){
         const cur = points[i];
         const next = points[i+1];
@@ -540,100 +589,206 @@
       return sections;
     }
 
-    function findStudentSection(row, sections){
+    // 단일/통합 공통: 해당 학생에 대한 페이지 후보 가져오기
+    function getStudentPages(row, mergedSections){
       const name = getName(row);
       const taskCol = getSelectedTaskCol();
       const task = taskCol ? String(row[taskCol] ?? "").trim() : "";
 
-      // 1순위: 섹션 맵
-      if(name && sections[name]){
-        return { text: sections[name], where: `이름기반 구간(${name})`, confidence:"high" };
+      // 1) 단일모드: 전체 페이지 반환
+      if(detectedPdfMode === "single"){
+        return { pages: pdfPages, where: "단일 PDF 전체 페이지", confidence: "high" };
       }
 
-      // 2순위: 이름 포함 페이지
-      if(name){
-        const hits = pdfPages.filter(p => p.text.includes(name));
-        if(hits.length){
-          const pick = hits.slice(0,4);
-          return {
-            text: pick.map(x=>x.text).join(" "),
-            where: `페이지 ${pick.map(x=>x.page).join(", ")}`,
-            confidence:"mid"
-          };
+      // 2) 통합모드: 이름 구간 텍스트 우선
+      if(name && mergedSections[name]){
+        const secText = mergedSections[name];
+        // 섹션 텍스트 기준으로 페이지 필터
+        const pages = pdfPages.filter(p => {
+          const t = p.text || "";
+          if(!t) return false;
+          const key = t.slice(0, Math.min(80, t.length));
+          return secText.includes(key) || (name && t.includes(name));
+        });
+        if(pages.length){
+          return { pages, where:`이름기반 구간(${name})`, confidence:"high" };
         }
       }
 
-      // 3순위: 과제명 키워드
+      // 3) 이름 포함 페이지
+      if(name){
+        const hits = pdfPages.filter(p=>p.text.includes(name));
+        if(hits.length) return { pages:hits, where:`이름 포함 페이지`, confidence:"mid" };
+      }
+
+      // 4) 과제명 키워드 페이지
       if(task){
         const tk = task.replace(/\s+/g," ").slice(0,12);
-        const hits = pdfPages.filter(p => p.text.includes(tk));
-        if(hits.length){
-          const pick = hits.slice(0,4);
-          return {
-            text: pick.map(x=>x.text).join(" "),
-            where: `과제명 기반 페이지 ${pick.map(x=>x.page).join(", ")}`,
-            confidence:"mid"
-          };
-        }
+        const hits = pdfPages.filter(p=>p.text.includes(tk));
+        if(hits.length) return { pages:hits, where:`과제명 기반 페이지`, confidence:"mid" };
       }
 
       // fallback
-      return { text: pdfAllText, where:"전체 PDF fallback", confidence:"low" };
+      return { pages: pdfPages, where:"전체 PDF fallback", confidence:"low" };
     }
 
-    // ----------------- 비교 로직 -----------------
-    function compareOne(row, sections){
+    // 필드별 검색 베이스 선택
+    function getSearchBaseByField(field, buckets){
+      const levelField = (
+        field.includes("문제 인식") || field.includes("솔루션 설계") ||
+        field.includes("LLM 활용") || field.includes("검증 및 개선") ||
+        field.includes("프로젝트")
+      );
+      const longField = (
+        field.includes("과제 상세") || field.includes("종합 제언") ||
+        field.includes("단기 적용 계획") || field.includes("중장기 적용 계획")
+      );
+
+      const refOff = excludeRefMode.value === "off";
+
+      // 기준표 제외 ON 이면 ref 사용 금지
+      const profText = buckets.prof.map(p=>p.text).join(" ");
+      const taskText = buckets.task.map(p=>p.text).join(" ");
+      const refText = buckets.ref.map(p=>p.text).join(" ");
+      const unknownText = buckets.unknown.map(p=>p.text).join(" ");
+
+      if(levelField){
+        let base = profText || unknownText;
+        if(refOff) base += " " + refText;
+        return base.trim();
+      }
+      if(longField){
+        let base = taskText || profText || unknownText;
+        if(refOff) base += " " + refText;
+        return base.trim();
+      }
+
+      // 과제명/진행률
+      let base = [profText, taskText, unknownText].join(" ");
+      if(refOff) base += " " + refText;
+      return base.trim();
+    }
+
+    // 등급형 엄격 추출 (기준표 오염 차단)
+    function extractLevelStrict(field, text){
+      const aliases = {
+        "문제 인식 및 정의": ["문제 인식 및 정의","문제 인식"],
+        "솔루션 설계": ["솔루션 설계"],
+        "LLM 활용 구현": ["LLM 활용 구현","LLM 활용"],
+        "검증 및 개선": ["검증 및 개선"],
+        "비전(Computer Vision) 프로젝트": ["비전","Computer Vision"],
+        "머신러닝(표준 ML) 프로젝트": ["머신러닝","표준 ML"],
+        "딥러닝(고급 DL) 프로젝트": ["딥러닝","고급 DL"]
+      }[field] || [field];
+
+      const lines = text.split(/\n+|(?<=[.!?])\s+/).map(s=>s.trim()).filter(Boolean);
+
+      // 1차: 필드 포함 + 레퍼런스성 문구 배제
+      for(const ln of lines){
+        const hasField = aliases.some(a=>ln.includes(a));
+        if(!hasField) continue;
+
+        const isReferenceLike = /Reference Guide|평가 기준|기술계 평가 기준|현업 문제를 인식하고|기본적인 해결 접근 방식을|공개된 예제\/노트북/.test(ln);
+        if(isReferenceLike) continue;
+
+        const lv = levels.find(l=>ln.includes(l));
+        if(lv) return { level: lv, snippet: ln };
+      }
+
+      // 2차: 근접 윈도우
+      const joined = lines.join(" ");
+      for(const a of aliases){
+        const i = joined.indexOf(a);
+        if(i === -1) continue;
+        const near = joined.substring(Math.max(0, i-100), i+260);
+        const lv = levels.find(l=>near.includes(l));
+        if(lv) return { level: lv, snippet: near };
+      }
+
+      return { level:null, snippet:"" };
+    }
+
+    function compareOne(row, mergedSections){
       const name = getName(row) || "(이름없음)";
-      const sec = findStudentSection(row, sections);
-      const base = sec.text;
+      const target = getStudentPages(row, mergedSections);
+      const buckets = classifyPages(target.pages);
       const details = [];
 
       for(const field of fields){
         const col = findColSmart(field);
         const ev = col ? String(row[col] ?? "").trim() : "";
-        const pv = extractNear(base, fieldKeywords(field), 900);
+
+        const base = getSearchBaseByField(field, buckets);
+        let pv = "";
+        let score = 0;
+        let status = "";
+        let note = "";
 
         if(!ev){
           details.push({ field, col: col||"(미매핑)", status:"missing_excel", note:"엑셀값 없음", ev:"", pv:"", score:0 });
           continue;
         }
+
+        const isLevelField = (
+          field.includes("문제 인식") || field.includes("솔루션 설계") ||
+          field.includes("LLM 활용") || field.includes("검증 및 개선") ||
+          field.includes("프로젝트")
+        );
+
+        if(isLevelField){
+          const ext = extractLevelStrict(field, base);
+          const pL = ext.level;
+          pv = ext.snippet || "";
+          const eL = findLevel(ev);
+
+          if(!pL){
+            details.push({ field, col: col||"(미매핑)", status:"missing_pdf", note:"등급 근거 미발견", ev, pv:"", score:0 });
+            continue;
+          }
+
+          if(eL && pL && eL === pL){
+            status = "match"; note = `등급 일치: ${eL}`; score = 1;
+          }else if(eL && pL){
+            status = "mismatch"; note = `등급 불일치 (엑셀:${eL}/PDF:${pL})`; score = 0;
+          }else{
+            const sc = tokenRatio(ev, pv);
+            status = sc>=0.35 ? "similar" : "mismatch";
+            note = `등급 판독 애매, 유사도 ${Math.round(sc*100)}%`;
+            score = sc;
+          }
+
+          details.push({ field, col, status, note, ev, pv, score });
+          continue;
+        }
+
+        // 일반/서술형
+        pv = extractNear(base, fieldKeywords(field), 900);
+
         if(!pv){
           details.push({ field, col: col||"(미매핑)", status:"missing_pdf", note:"PDF 항목 미발견", ev, pv:"", score:0 });
           continue;
         }
 
-        // exact
         if(field === "과제명" || field === "진행률"){
           const en = normalize(ev), pn = normalize(pv);
           if(en === pn){
-            details.push({ field, col, status:"match", note:"정확 일치", ev, pv, score:1 });
+            status="match"; note="정확 일치"; score=1;
           }else if(pn.includes(en) || en.includes(pn)){
-            details.push({ field, col, status:"similar", note:"부분 일치", ev, pv, score:0.7 });
+            status="similar"; note="부분 일치"; score=0.7;
           }else{
             const sc = tokenRatio(ev, pv);
-            details.push({ field, col, status: sc>=0.45?"similar":"mismatch", note:`유사도 ${Math.round(sc*100)}%`, ev, pv, score:sc });
+            status = sc>=0.45 ? "similar" : "mismatch";
+            note = `유사도 ${Math.round(sc*100)}%`;
+            score = sc;
           }
-          continue;
+        }else{
+          const sc = tokenRatio(ev, pv);
+          status = sc>=0.55 ? "match" : sc>=0.25 ? "similar" : "mismatch";
+          note = `유사도 ${Math.round(sc*100)}%`;
+          score = sc;
         }
 
-        // level
-        if(field.includes("문제 인식") || field.includes("솔루션 설계") || field.includes("LLM 활용") || field.includes("검증 및 개선") || field.includes("프로젝트")){
-          const eL = findLevel(ev), pL = findLevel(pv);
-          if(eL && pL && eL === pL){
-            details.push({ field, col, status:"match", note:`등급 일치: ${eL}`, ev, pv, score:1 });
-          }else if(eL && pL){
-            details.push({ field, col, status:"mismatch", note:`등급 불일치 (엑셀:${eL}/PDF:${pL})`, ev, pv, score:0 });
-          }else{
-            const sc = tokenRatio(ev, pv);
-            details.push({ field, col, status: sc>=0.35?"similar":"mismatch", note:`등급 판독 애매, 유사도 ${Math.round(sc*100)}%`, ev, pv, score:sc });
-          }
-          continue;
-        }
-
-        // semantic
-        const sc = tokenRatio(ev, pv);
-        const st = sc>=0.55 ? "match" : sc>=0.25 ? "similar" : "mismatch";
-        details.push({ field, col, status:st, note:`유사도 ${Math.round(sc*100)}%`, ev, pv, score:sc });
+        details.push({ field, col, status, note, ev, pv, score });
       }
 
       const summary = {
@@ -644,9 +799,10 @@
         missing_excel: details.filter(x=>x.status==="missing_excel").length,
       };
 
-      return { name, where: sec.where, confidence: sec.confidence, details, summary };
+      return { name, where: target.where, confidence: target.confidence, details, summary };
     }
 
+    // ---------------- 렌더 ----------------
     function badge(st){
       if(st==="match") return `<span class="badge match">일치</span>`;
       if(st==="similar") return `<span class="badge similar">유사</span>`;
@@ -723,15 +879,13 @@
       resultEl.innerHTML = html;
     }
 
-    // ----------------- 이벤트 -----------------
+    // ---------------- 이벤트 ----------------
     excelFile.addEventListener("change", async ()=>{
       const f = excelFile.files[0];
       if(!f) return;
-
       excelFileRef = f;
       document.getElementById("excelMsg").textContent = "엑셀 분석 중...";
 
-      // 시트 목록 초기화 위해 1회 읽기
       const buf = await f.arrayBuffer();
       const wb = XLSX.read(buf, { type:"array" });
       allSheets = wb.SheetNames;
@@ -743,16 +897,10 @@
         op.textContent = idx===0 ? `${s} (기본)` : s;
         sheetSelect.appendChild(op);
       });
+      sheetSelect.dataset.inited = "1";
 
       await parseExcelFromCurrentOptions();
       statusEl.innerHTML = `<span class="ok">엑셀 로드 완료</span>`;
-    });
-
-    pdfFile.addEventListener("change", ()=>{
-      const f = pdfFile.files[0];
-      if(!f) return;
-      document.getElementById("pdfMsg").textContent = `선택: ${f.name}`;
-      updateButtons();
     });
 
     btnReloadExcel.addEventListener("click", async ()=>{
@@ -762,42 +910,35 @@
       statusEl.innerHTML = `<span class="ok">엑셀 재파싱 완료</span>`;
     });
 
-    [nameColSelect, taskColSelect].forEach(el => {
+    [nameColSelect, taskColSelect].forEach(el=>{
       el.addEventListener("change", ()=>{
-        // 수강생 목록 다시 렌더
-        const tcol = getSelectedTaskCol();
-        studentSelect.innerHTML = `<option value="">-- 수강생 선택 --</option>`;
-        excelRows.forEach((r,i)=>{
-          const n = getName(r) || `행${i+1}`;
-          const t = tcol ? String(r[tcol] ?? "").trim().slice(0,30) : "";
-          const op = document.createElement("option");
-          op.value = i;
-          op.textContent = `${n} | ${t}`;
-          studentSelect.appendChild(op);
-        });
+        rebuildStudentSelect();
         updateMappingInfo();
         updateButtons();
       });
     });
 
-    sheetSelect.addEventListener("change", async ()=>{
-      if(!excelFileRef) return;
-      statusEl.innerHTML = `<span class="warn">시트 변경 파싱 중...</span>`;
-      await parseExcelFromCurrentOptions();
-      statusEl.innerHTML = `<span class="ok">시트 변경 완료</span>`;
+    [sheetSelect, headerMode].forEach(el=>{
+      el.addEventListener("change", async ()=>{
+        if(!excelFileRef) return;
+        statusEl.innerHTML = `<span class="warn">엑셀 파싱 중...</span>`;
+        await parseExcelFromCurrentOptions();
+        statusEl.innerHTML = `<span class="ok">엑셀 파싱 완료</span>`;
+      });
     });
 
-    headerMode.addEventListener("change", async ()=>{
-      if(!excelFileRef) return;
-      statusEl.innerHTML = `<span class="warn">헤더 모드 변경 파싱 중...</span>`;
-      await parseExcelFromCurrentOptions();
-      statusEl.innerHTML = `<span class="ok">헤더 모드 적용 완료</span>`;
+    pdfFile.addEventListener("change", ()=>{
+      const f = pdfFile.files[0];
+      if(!f) return;
+      document.getElementById("pdfMsg").textContent = `선택: ${f.name}`;
+      updateButtons();
     });
 
-    btnLoadPdf.addEventListener("click", async ()=>{
-      await parsePdfText();
+    pdfMode.addEventListener("change", ()=>{
+      updatePdfModeInfo(`PDF 모드 설정: <b>${pdfMode.value}</b> (추출 후 자동 반영)`);
     });
 
+    btnLoadPdf.addEventListener("click", async ()=>{ await parsePdfText(); });
     studentSelect.addEventListener("change", updateButtons);
 
     btnCompare.addEventListener("click", ()=>{
@@ -805,9 +946,9 @@
       if(isNaN(idx)) return alert("수강생을 선택하세요.");
       if(!getSelectedNameCol()) return alert("이름 컬럼을 지정해주세요.");
 
-      const sections = buildStudentSections();
+      const mergedSections = buildStudentSectionsMerged();
       const row = excelRows[idx];
-      const res = compareOne(row, sections);
+      const res = compareOne(row, mergedSections);
       renderOne(res);
     });
 
@@ -816,8 +957,8 @@
       if(!getSelectedNameCol()) return alert("이름 컬럼을 지정해주세요.");
 
       statusEl.innerHTML = `<span class="warn">전체 비교 중...</span>`;
-      const sections = buildStudentSections();
-      const all = excelRows.map(r => compareOne(r, sections));
+      const mergedSections = buildStudentSectionsMerged();
+      const all = excelRows.map(r => compareOne(r, mergedSections));
       renderAll(all);
       statusEl.innerHTML = `<span class="ok">전체 비교 완료 (${all.length}명)</span>`;
     });
