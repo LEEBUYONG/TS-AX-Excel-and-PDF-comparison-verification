@@ -3,502 +3,341 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>엑셀 PDF 항목 비교 도구</title>
-
+  <title>엑셀 vs 통합 PDF 비교기 (단일 HTML)</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f5f7fb;
-      margin: 0;
-      padding: 30px;
-      color: #222;
-    }
-
-    .container {
-      max-width: 1100px;
-      margin: 0 auto;
-      background: #fff;
-      padding: 30px;
-      border-radius: 14px;
-      box-shadow: 0 6px 20px rgba(0,0,0,0.08);
-    }
-
-    h1 {
-      margin-top: 0;
-      color: #1f2937;
-    }
-
-    .description {
-      color: #555;
-      line-height: 1.6;
-      margin-bottom: 25px;
-    }
-
-    .upload-section {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 20px;
-      margin-bottom: 25px;
-    }
-
-    .upload-box {
-      border: 2px dashed #cbd5e1;
-      padding: 20px;
-      border-radius: 12px;
-      background: #f8fafc;
-    }
-
-    .upload-box label {
-      display: block;
-      font-weight: bold;
-      margin-bottom: 10px;
-    }
-
-    input[type="file"] {
-      width: 100%;
-    }
-
-    .option-section {
-      background: #f9fafb;
-      border: 1px solid #e5e7eb;
-      border-radius: 12px;
-      padding: 20px;
-      margin-bottom: 25px;
-    }
-
-    .option-row {
-      display: flex;
-      gap: 15px;
-      flex-wrap: wrap;
-      margin-bottom: 10px;
-    }
-
-    .option-row label {
-      font-weight: bold;
-    }
-
-    input[type="text"],
-    input[type="number"] {
-      padding: 8px;
-      border: 1px solid #cbd5e1;
-      border-radius: 6px;
-    }
-
-    button {
-      background: #2563eb;
-      color: white;
-      border: none;
-      padding: 12px 22px;
-      border-radius: 8px;
-      font-weight: bold;
-      cursor: pointer;
-    }
-
-    button:hover {
-      background: #1d4ed8;
-    }
-
-    button:disabled {
-      background: #94a3b8;
-      cursor: not-allowed;
-    }
-
-    .result {
-      margin-top: 30px;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 15px;
-      font-size: 14px;
-    }
-
-    th, td {
-      border: 1px solid #e5e7eb;
-      padding: 10px;
-      text-align: left;
-      vertical-align: top;
-    }
-
-    th {
-      background: #f1f5f9;
-    }
-
-    .match {
-      color: #15803d;
-      font-weight: bold;
-    }
-
-    .mismatch {
-      color: #dc2626;
-      font-weight: bold;
-    }
-
-    .missing {
-      color: #d97706;
-      font-weight: bold;
-    }
-
-    .summary {
-      display: flex;
-      gap: 15px;
-      flex-wrap: wrap;
-      margin-top: 20px;
-    }
-
-    .summary-card {
-      flex: 1;
-      min-width: 180px;
-      padding: 16px;
-      border-radius: 10px;
-      background: #f8fafc;
-      border: 1px solid #e5e7eb;
-    }
-
-    .summary-card strong {
-      display: block;
-      font-size: 24px;
-      margin-top: 8px;
-    }
-
-    pre {
-      background: #111827;
-      color: #e5e7eb;
-      padding: 15px;
-      border-radius: 8px;
-      overflow-x: auto;
-      white-space: pre-wrap;
-    }
-
-    @media (max-width: 768px) {
-      .upload-section {
-        grid-template-columns: 1fr;
-      }
-    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Arial,sans-serif;background:#f3f6fb;color:#1f2937}
+    header{background:#0b5cab;color:#fff;padding:14px 18px}
+    header h1{margin:0;font-size:18px}
+    .wrap{max-width:1200px;margin:16px auto;padding:0 12px}
+    .card{background:#fff;border-radius:12px;padding:14px;margin-bottom:12px;box-shadow:0 2px 10px rgba(0,0,0,.05)}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    @media(max-width:900px){.grid{grid-template-columns:1fr}}
+    label{display:block;font-size:13px;font-weight:700;color:#4b5563;margin-bottom:6px}
+    input[type=file],select{width:100%;padding:10px;border:1px solid #d1d5db;border-radius:8px}
+    button{border:none;background:#0b5cab;color:#fff;padding:10px 14px;border-radius:8px;font-weight:700;cursor:pointer}
+    button:disabled{background:#9ca3af;cursor:not-allowed}
+    .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+    .muted{color:#6b7280;font-size:12px}
+    .chips{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+    .chip{padding:6px 10px;border-radius:20px;font-size:12px;font-weight:700}
+    .match{background:#dcfce7;color:#166534}.similar{background:#fef9c3;color:#854d0e}
+    .mismatch{background:#fee2e2;color:#991b1b}.missing{background:#e5e7eb;color:#374151}
+    table{width:100%;border-collapse:collapse;font-size:13px}
+    th,td{border-bottom:1px solid #e5e7eb;padding:9px;vertical-align:top}
+    th{background:#f9fafb;text-align:left}
+    .txt{max-height:120px;overflow:auto;white-space:pre-wrap;background:#f8fafc;border:1px solid #e2e8f0;padding:7px;border-radius:6px}
+    .badge{font-size:12px;padding:4px 8px;border-radius:6px;font-weight:700;display:inline-block}
+    .pbar{height:6px;background:#e5e7eb;border-radius:8px;margin-top:4px}
+    .pfill{height:6px;background:#0b5cab;border-radius:8px}
+    .ok{color:#166534}.warn{color:#92400e}.err{color:#991b1b}
   </style>
 </head>
-
 <body>
-  <div class="container">
-    <h1>엑셀 PDF 항목 비교 도구</h1>
-
-    <p class="description">
-      엑셀 파일과 PDF 파일을 업로드하면 엑셀에 있는 항목이 PDF 문서에도 동일하게 기재되어 있는지 비교합니다.
-      <br />
-      기본 방식은 엑셀의 각 행을 기준으로 PDF 텍스트 내 포함 여부를 검사합니다.
-    </p>
-
-    <div class="upload-section">
-      <div class="upload-box">
-        <label for="excelFile">엑셀 파일 업로드</label>
-        <input type="file" id="excelFile" accept=".xlsx,.xls,.csv" />
+  <header><h1>📊 엑셀 vs 통합 PDF 비교기 (index.html 단일)</h1></header>
+  <div class="wrap">
+    <div class="card grid">
+      <div>
+        <label>엑셀 파일 (.xlsx/.xls)</label>
+        <input id="excelFile" type="file" accept=".xlsx,.xls"/>
+        <div class="muted" id="excelMsg">엑셀을 선택하세요</div>
       </div>
-
-      <div class="upload-box">
-        <label for="pdfFile">PDF 파일 업로드</label>
-        <input type="file" id="pdfFile" accept=".pdf" />
+      <div>
+        <label>통합 PDF 파일 (전체 수강생 포함)</label>
+        <input id="pdfFile" type="file" accept=".pdf"/>
+        <div class="muted" id="pdfMsg">PDF를 선택하세요</div>
       </div>
     </div>
 
-    <div class="option-section">
-      <h3>비교 옵션</h3>
-
-      <div class="option-row">
-        <label>
-          엑셀 헤더 행 번호:
-          <input type="number" id="headerRow" value="1" min="1" />
-        </label>
-
-        <label>
-          비교할 컬럼명:
-          <input type="text" id="compareColumns" placeholder="예: 품명,규격,수량" />
-        </label>
+    <div class="card">
+      <div class="row">
+        <div style="min-width:300px;flex:1">
+          <label>수강생 선택</label>
+          <select id="studentSelect"><option value="">-- 엑셀 업로드 후 선택 --</option></select>
+        </div>
+        <div style="padding-top:18px"><button id="btnLoadPdf" disabled>PDF 텍스트 추출</button></div>
+        <div style="padding-top:18px"><button id="btnCompare" disabled>선택 수강생 비교</button></div>
+        <div style="padding-top:18px"><button id="btnCompareAll" disabled>전체 수강생 일괄 비교</button></div>
       </div>
-
-      <p style="color:#666; font-size:14px;">
-        비교할 컬럼명을 비워두면 엑셀의 모든 컬럼 값을 합쳐서 PDF 내용과 비교합니다.
-        여러 컬럼은 쉼표로 구분하세요.
-      </p>
+      <div id="status" class="muted" style="margin-top:8px">대기 중</div>
     </div>
 
-    <button id="compareBtn" onclick="compareFiles()">비교하기</button>
-
-    <div class="result" id="result"></div>
+    <div class="card" id="result"><div class="muted">결과가 여기에 표시됩니다.</div></div>
   </div>
 
   <script>
-    pdfjsLib.GlobalWorkerOptions.workerSrc =
-      "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+    pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
 
     let excelRows = [];
-    let pdfText = "";
+    let headers = [];
+    let pdfPages = [];   // [{page, text}]
+    let pdfAllText = "";
 
-    async function readExcel(file, headerRowNumber) {
-      return new Promise((resolve, reject) => {
-        const reader = new FileReader();
+    const fields = [
+      "과제명",
+      "문제 인식 및 정의",
+      "솔루션 설계",
+      "LLM 활용 구현",
+      "검증 및 개선",
+      "비전(Computer Vision) 프로젝트",
+      "머신러닝(표준 ML) 프로젝트",
+      "딥러닝(고급 DL) 프로젝트",
+      "과제 상세",
+      "종합 제언",
+      "단기 적용 계획",
+      "중장기 적용 계획",
+      "진행률",
+    ];
 
-        reader.onload = function (e) {
-          try {
-            const data = new Uint8Array(e.target.result);
-            const workbook = XLSX.read(data, { type: "array" });
-            const firstSheetName = workbook.SheetNames[0];
-            const worksheet = workbook.Sheets[firstSheetName];
+    const lv = ["보통","우수","탁월","초급","중급","고급","전문가"];
 
-            const jsonRows = XLSX.utils.sheet_to_json(worksheet, {
-              header: 1,
-              defval: ""
-            });
+    const excelFile = document.getElementById("excelFile");
+    const pdfFile = document.getElementById("pdfFile");
+    const studentSelect = document.getElementById("studentSelect");
+    const btnLoadPdf = document.getElementById("btnLoadPdf");
+    const btnCompare = document.getElementById("btnCompare");
+    const btnCompareAll = document.getElementById("btnCompareAll");
+    const statusEl = document.getElementById("status");
+    const resultEl = document.getElementById("result");
 
-            const headerIndex = headerRowNumber - 1;
-            const headers = jsonRows[headerIndex].map(h => String(h).trim());
+    function normalize(s){ return (s||"").toString().toLowerCase().replace(/\s+|[.,·•\-]/g,""); }
+    function findLevel(s){ s=(s||"").toString(); return lv.find(x=>s.includes(x)) || null; }
+    function ratio(a,b){
+      // 간단 토큰 기반 유사도
+      const stop = new Set(["및","을","를","이","가","은","는","의","에","로","으로","하고","하여","수","것","등","또한","통해","대한","위한","본"]);
+      const tok = t => (t||"").replace(/[^가-힣a-zA-Z0-9\s]/g," ").split(/\s+/).filter(x=>x.length>1&&!stop.has(x));
+      const A = new Set(tok(a)), B = new Set(tok(b));
+      if(!A.size || !B.size) return 0;
+      let inter=0; A.forEach(x=>{if(B.has(x)) inter++;});
+      return inter / Math.min(A.size,B.size);
+    }
+    function findCol(target){
+      if(headers.includes(target)) return target;
+      return headers.find(h=>h.includes(target) || target.includes(h)) || null;
+    }
+    function extractNear(text, kws, w=700){
+      if(typeof kws==="string") kws=[kws];
+      for(const kw of kws){
+        const i=text.indexOf(kw);
+        if(i!==-1) return text.substring(Math.max(0,i-80), i+w).replace(/\s+/g," ").trim();
+      }
+      return "";
+    }
+    function kws(field){
+      const m={
+        "과제명":["과제명"],
+        "문제 인식 및 정의":["문제 인식","문제 인식 및 정의"],
+        "솔루션 설계":["솔루션 설계"],
+        "LLM 활용 구현":["LLM 활용 구현","LLM 활용"],
+        "검증 및 개선":["검증 및 개선"],
+        "비전(Computer Vision) 프로젝트":["비전","Computer Vision"],
+        "머신러닝(표준 ML) 프로젝트":["머신러닝","표준 ML"],
+        "딥러닝(고급 DL) 프로젝트":["딥러닝","고급 DL"],
+        "과제 상세":["과제 상세","과제상세"],
+        "종합 제언":["종합 제언","종합제언"],
+        "단기 적용 계획":["단기 적용 계획","단기적용"],
+        "중장기 적용 계획":["중장기 적용 계획","중장기적용"],
+        "진행률":["진행률","완료"]
+      };
+      return m[field] || [field];
+    }
 
-            const rows = jsonRows.slice(headerIndex + 1).map((row, index) => {
-              const obj = { __rowNumber: index + headerRowNumber + 1 };
-
-              headers.forEach((header, i) => {
-                if (header) {
-                  obj[header] = row[i] !== undefined ? String(row[i]).trim() : "";
-                }
-              });
-
-              return obj;
-            }).filter(row => {
-              return Object.keys(row)
-                .filter(key => key !== "__rowNumber")
-                .some(key => row[key] !== "");
-            });
-
-            resolve(rows);
-          } catch (error) {
-            reject(error);
-          }
-        };
-
-        reader.onerror = reject;
-        reader.readAsArrayBuffer(file);
+    excelFile.addEventListener("change", async ()=>{
+      const f = excelFile.files[0];
+      if(!f) return;
+      document.getElementById("excelMsg").textContent = "읽는 중...";
+      const buf = await f.arrayBuffer();
+      const wb = XLSX.read(buf, {type:"array"});
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      excelRows = XLSX.utils.sheet_to_json(ws, {defval:""});
+      headers = excelRows.length ? Object.keys(excelRows[0]) : [];
+      studentSelect.innerHTML = `<option value="">-- 수강생 선택 --</option>`;
+      excelRows.forEach((r,i)=>{
+        const name = r["성함"] || r["이름"] || r["수료생"] || `행${i+2}`;
+        const task = (r["과제명"]||"").toString().slice(0,30);
+        const opt = document.createElement("option");
+        opt.value=i; opt.textContent=`${name} | ${task}`;
+        studentSelect.appendChild(opt);
       });
-    }
+      document.getElementById("excelMsg").textContent = `✅ ${f.name} / ${excelRows.length}명 로드`;
+      btnLoadPdf.disabled = !pdfFile.files.length;
+      statusEl.innerHTML = `<span class="ok">엑셀 로드 완료</span>`;
+    });
 
-    async function readPdf(file) {
-      const arrayBuffer = await file.arrayBuffer();
-      const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+    pdfFile.addEventListener("change", ()=>{
+      const f = pdfFile.files[0];
+      if(!f) return;
+      document.getElementById("pdfMsg").textContent = `선택: ${f.name}`;
+      btnLoadPdf.disabled = !excelRows.length;
+    });
 
-      let fullText = "";
+    studentSelect.addEventListener("change", ()=>{
+      btnCompare.disabled = !(studentSelect.value!=="" && pdfAllText.length>0);
+    });
 
-      for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
-        const page = await pdf.getPage(pageNum);
-        const content = await page.getTextContent();
-
-        const pageText = content.items
-          .map(item => item.str)
-          .join(" ");
-
-        fullText += pageText + "\n";
+    btnLoadPdf.addEventListener("click", async ()=>{
+      const f = pdfFile.files[0];
+      if(!f){ alert("PDF 선택"); return; }
+      statusEl.innerHTML = `<span class="warn">PDF 텍스트 추출 중...</span>`;
+      pdfPages=[]; pdfAllText="";
+      try{
+        const buf = await f.arrayBuffer();
+        const pdf = await pdfjsLib.getDocument({data:buf}).promise;
+        for(let p=1; p<=pdf.numPages; p++){
+          const page = await pdf.getPage(p);
+          const tc = await page.getTextContent();
+          const t = tc.items.map(x=>x.str).join(" ");
+          pdfPages.push({page:p,text:t});
+          pdfAllText += "\n" + t;
+          if(p%5===0) statusEl.textContent = `PDF 추출 진행: ${p}/${pdf.numPages}`;
+        }
+        statusEl.innerHTML = `<span class="ok">PDF 추출 완료 (${pdf.numPages}페이지)</span>`;
+        btnCompareAll.disabled = false;
+        btnCompare.disabled = studentSelect.value==="";
+      }catch(e){
+        statusEl.innerHTML = `<span class="err">PDF 추출 실패: ${e.message}</span>`;
       }
+    });
 
-      return normalizeText(fullText);
-    }
-
-    function normalizeText(text) {
-      return String(text)
-        .replace(/\s+/g, " ")
-        .replace(/[　]/g, " ")
-        .trim()
-        .toLowerCase();
-    }
-
-    function buildCompareText(row, selectedColumns) {
-      let values = [];
-
-      if (selectedColumns.length > 0) {
-        selectedColumns.forEach(col => {
-          if (row[col] !== undefined && row[col] !== "") {
-            values.push(row[col]);
-          }
-        });
-      } else {
-        Object.keys(row).forEach(key => {
-          if (key !== "__rowNumber" && row[key] !== "") {
-            values.push(row[key]);
-          }
-        });
+    function findStudentSection(name){
+      // 이름이 들어있는 페이지 우선 탐색
+      const hit = pdfPages.filter(p=>p.text.includes(name));
+      if(hit.length){
+        const pages = hit.slice(0,3).map(h=>h.page).join(", ");
+        const text = hit.slice(0,3).map(h=>h.text).join(" ");
+        return {text, where:`페이지 ${pages}`};
       }
-
-      return values.join(" ");
+      // 못 찾으면 전체 텍스트 fallback
+      return {text:pdfAllText, where:"전체 PDF(이름 매칭 실패 fallback)"};
     }
 
-    function compareExcelWithPdf(rows, pdfText, selectedColumns) {
-      return rows.map(row => {
-        const originalText = buildCompareText(row, selectedColumns);
-        const normalizedCompareText = normalizeText(originalText);
+    function compareOne(row){
+      const name = (row["성함"]||row["이름"]||row["수료생"]||"").toString().trim();
+      const section = findStudentSection(name);
+      const baseText = section.text;
 
-        let status = "누락";
-        let detail = "PDF에서 해당 항목을 찾지 못했습니다.";
+      const out = [];
+      for(const f of fields){
+        const c = findCol(f);
+        const ev = c ? String(row[c]||"").trim() : "";
+        const pv = extractNear(baseText, kws(f), 700);
 
-        if (!normalizedCompareText) {
-          status = "비교불가";
-          detail = "비교할 값이 없습니다.";
-        } else if (pdfText.includes(normalizedCompareText)) {
-          status = "일치";
-          detail = "엑셀 항목이 PDF에 동일하게 존재합니다.";
-        } else {
-          const partialMatches = [];
+        if(!ev){ out.push({f,status:"missing_excel",note:"엑셀값 없음",ev,pv:""}); continue; }
+        if(!pv){ out.push({f,status:"missing_pdf",note:"PDF 항목 미발견",ev,pv:""}); continue; }
 
-          Object.keys(row).forEach(key => {
-            if (key !== "__rowNumber" && row[key]) {
-              const value = normalizeText(row[key]);
-              if (value && pdfText.includes(value)) {
-                partialMatches.push(`${key}: ${row[key]}`);
-              }
-            }
-          });
-
-          if (partialMatches.length > 0) {
-            status = "부분일치";
-            detail = "일부 값만 PDF에서 확인됨: " + partialMatches.join(", ");
+        if(["과제명","진행률"].includes(f)){
+          const en=normalize(ev), pn=normalize(pv);
+          if(en===pn) out.push({f,status:"match",note:"정확 일치",ev,pv,score:1});
+          else if(pn.includes(en)||en.includes(pn)) out.push({f,status:"similar",note:"부분 일치",ev,pv,score:0.7});
+          else{
+            const sc = ratio(ev,pv);
+            out.push({f,status:sc>=0.45?"similar":"mismatch",note:`유사도 ${Math.round(sc*100)}%`,ev,pv,score:sc});
           }
+          continue;
         }
 
-        return {
-          rowNumber: row.__rowNumber,
-          excelData: row,
-          compareText: originalText,
-          status,
-          detail
-        };
-      });
+        if(f.includes("문제 인식")||f.includes("솔루션 설계")||f.includes("LLM 활용")||f.includes("검증 및 개선")||f.includes("프로젝트")){
+          const eL=findLevel(ev), pL=findLevel(pv);
+          if(eL&&pL&&eL===pL) out.push({f,status:"match",note:`등급 일치:${eL}`,ev,pv,score:1});
+          else if(eL&&pL) out.push({f,status:"mismatch",note:`등급 불일치(엑셀:${eL}/PDF:${pL})`,ev,pv,score:0});
+          else{
+            const sc=ratio(ev,pv);
+            out.push({f,status:sc>=0.35?"similar":"mismatch",note:`등급 판독 애매, 유사도 ${Math.round(sc*100)}%`,ev,pv,score:sc});
+          }
+          continue;
+        }
+
+        const sc = ratio(ev,pv);
+        const st = sc>=0.55 ? "match" : sc>=0.25 ? "similar" : "mismatch";
+        out.push({f,status:st,note:`유사도 ${Math.round(sc*100)}%`,ev,pv,score:sc});
+      }
+
+      const sum = {
+        match: out.filter(x=>x.status==="match").length,
+        similar: out.filter(x=>x.status==="similar").length,
+        mismatch: out.filter(x=>x.status==="mismatch").length,
+        missing_pdf: out.filter(x=>x.status==="missing_pdf").length,
+        missing_excel: out.filter(x=>x.status==="missing_excel").length,
+      };
+
+      return {name, sectionWhere: section.where, details: out, summary: sum};
     }
 
-    function renderResult(results) {
-      const total = results.length;
-      const matched = results.filter(r => r.status === "일치").length;
-      const partial = results.filter(r => r.status === "부분일치").length;
-      const missing = results.filter(r => r.status === "누락").length;
-      const unable = results.filter(r => r.status === "비교불가").length;
+    function badge(st){
+      if(st==="match") return `<span class="badge match">일치</span>`;
+      if(st==="similar") return `<span class="badge similar">유사</span>`;
+      if(st==="mismatch") return `<span class="badge mismatch">불일치</span>`;
+      return `<span class="badge missing">누락</span>`;
+    }
 
-      let html = `
-        <h2>비교 결과</h2>
-
-        <div class="summary">
-          <div class="summary-card">
-            전체 항목
-            <strong>${total}</strong>
-          </div>
-          <div class="summary-card">
-            일치
-            <strong style="color:#15803d;">${matched}</strong>
-          </div>
-          <div class="summary-card">
-            부분일치
-            <strong style="color:#d97706;">${partial}</strong>
-          </div>
-          <div class="summary-card">
-            누락
-            <strong style="color:#dc2626;">${missing}</strong>
-          </div>
-          <div class="summary-card">
-            비교불가
-            <strong>${unable}</strong>
-          </div>
+    function renderOne(res){
+      const s=res.summary;
+      let h = `
+        <h3 style="margin:0 0 8px">결과: ${res.name || "(이름없음)"}</h3>
+        <div class="muted">검색 범위: ${res.sectionWhere}</div>
+        <div class="chips">
+          <span class="chip match">일치 ${s.match}</span>
+          <span class="chip similar">유사 ${s.similar}</span>
+          <span class="chip mismatch">불일치 ${s.mismatch}</span>
+          <span class="chip missing">PDF미발견 ${s.missing_pdf}</span>
+          <span class="chip missing">엑셀없음 ${s.missing_excel}</span>
         </div>
-
         <table>
-          <thead>
-            <tr>
-              <th>엑셀 행</th>
-              <th>비교 항목</th>
-              <th>상태</th>
-              <th>상세 내용</th>
-              <th>엑셀 원본 데이터</th>
-            </tr>
-          </thead>
+          <thead><tr><th>항목</th><th>판정</th><th>엑셀 값</th><th>PDF 근거</th><th>비고</th></tr></thead>
           <tbody>
       `;
-
-      results.forEach(result => {
-        let statusClass = "";
-
-        if (result.status === "일치") statusClass = "match";
-        else if (result.status === "누락") statusClass = "mismatch";
-        else if (result.status === "부분일치") statusClass = "missing";
-
-        html += `
+      res.details.forEach(d=>{
+        const bar = (d.score!=null) ? `<div class="pbar"><div class="pfill" style="width:${Math.round((d.score||0)*100)}%"></div></div>` : "";
+        h += `
           <tr>
-            <td>${escapeHtml(result.rowNumber)}</td>
-            <td>${escapeHtml(result.compareText)}</td>
-            <td class="${statusClass}">${escapeHtml(result.status)}</td>
-            <td>${escapeHtml(result.detail)}</td>
-            <td><pre>${escapeHtml(JSON.stringify(result.excelData, null, 2))}</pre></td>
+            <td><b>${d.f}</b></td>
+            <td>${badge(d.status)}${bar}</td>
+            <td><div class="txt">${(d.ev||"(없음)").slice(0,800)}</div></td>
+            <td><div class="txt">${(d.pv||"(없음)").slice(0,800)}</div></td>
+            <td class="muted">${d.note||""}</td>
           </tr>
         `;
       });
-
-      html += `
-          </tbody>
-        </table>
-      `;
-
-      document.getElementById("result").innerHTML = html;
+      h += `</tbody></table>`;
+      resultEl.innerHTML = h;
     }
 
-    function escapeHtml(value) {
-      return String(value)
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
-    }
+    btnCompare.addEventListener("click", ()=>{
+      const i = parseInt(studentSelect.value,10);
+      if(isNaN(i)) return alert("수강생 선택");
+      const row = excelRows[i];
+      const r = compareOne(row);
+      renderOne(r);
+    });
 
-    async function compareFiles() {
-      const excelFile = document.getElementById("excelFile").files[0];
-      const pdfFile = document.getElementById("pdfFile").files[0];
-      const headerRow = Number(document.getElementById("headerRow").value || 1);
-      const compareColumnsInput = document.getElementById("compareColumns").value.trim();
+    btnCompareAll.addEventListener("click", ()=>{
+      if(!excelRows.length) return;
+      statusEl.innerHTML = `<span class="warn">전체 비교 중...</span>`;
+      const all = excelRows.map(r=>compareOne(r));
+      const top = all.map(x=>{
+        const score = x.summary.match*2 + x.summary.similar - x.summary.mismatch*2 - x.summary.missing_pdf;
+        return {...x, score};
+      }).sort((a,b)=>a.score-b.score); // 문제 큰 순
 
-      const selectedColumns = compareColumnsInput
-        ? compareColumnsInput.split(",").map(col => col.trim()).filter(Boolean)
-        : [];
-
-      if (!excelFile) {
-        alert("엑셀 파일을 업로드해 주세요.");
-        return;
-      }
-
-      if (!pdfFile) {
-        alert("PDF 파일을 업로드해 주세요.");
-        return;
-      }
-
-      const button = document.getElementById("compareBtn");
-      button.disabled = true;
-      button.textContent = "비교 중...";
-
-      document.getElementById("result").innerHTML = "<p>파일을 분석하고 있습니다...</p>";
-
-      try {
-        excelRows = await readExcel(excelFile, headerRow);
-        pdfText = await readPdf(pdfFile);
-
-        const results = compareExcelWithPdf(excelRows, pdfText, selectedColumns);
-
-        renderResult(results);
-      } catch (error) {
-        console.error(error);
-        document.getElementById("result").innerHTML = `
-          <p style="color:#dc2626; font-weight:bold;">
-            오류가 발생했습니다: ${escapeHtml(error.message)}
-          </p>
-        `;
-      } finally {
-        button.disabled = false;
-        button.textContent = "비교하기";
-      }
-    }
+      let h = `<h3 style="margin:0 0 8px">전체 수강생 일괄 비교 (문제 큰 순)</h3>`;
+      h += `<table><thead><tr><th>수강생</th><th>일치</th><th>유사</th><th>불일치</th><th>PDF미발견</th><th>엑셀없음</th><th>점수</th></tr></thead><tbody>`;
+      top.forEach(x=>{
+        h += `<tr>
+          <td>${x.name||"(이름없음)"}</td>
+          <td>${x.summary.match}</td>
+          <td>${x.summary.similar}</td>
+          <td style="color:#991b1b;font-weight:700">${x.summary.mismatch}</td>
+          <td>${x.summary.missing_pdf}</td>
+          <td>${x.summary.missing_excel}</td>
+          <td>${x.score}</td>
+        </tr>`;
+      });
+      h += `</tbody></table><div class="muted" style="margin-top:8px">※ 상세는 개별 수강생 선택 후 '선택 수강생 비교'로 확인하세요.</div>`;
+      resultEl.innerHTML = h;
+      statusEl.innerHTML = `<span class="ok">전체 비교 완료 (${all.length}명)</span>`;
+    });
   </script>
 </body>
 </html>
